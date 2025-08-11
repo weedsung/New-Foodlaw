@@ -1,7 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { TrendingUp, TrendingDown, Package, AlertTriangle, CheckCircle, Clock } from "lucide-react"
+import { TrendingUp, TrendingDown, Package, Clock, CheckCircle, AlertTriangle } from "lucide-react"
 
 const detailedStats = [
   {
@@ -12,53 +12,46 @@ const detailedStats = [
     icon: Package,
     details: [
       { label: "이번 달 신규", value: "3개" },
-      { label: "분석 완료", value: "21개" },
-      { label: "검토 중", value: "3개" },
+      { label: "활성 제품", value: "21개" },
+      { label: "보관 제품", value: "3개" },
     ],
   },
   {
-    title: "법규 준수율",
-    value: "94.2%",
-    change: "+2.1%",
+    title: "개발 중",
+    value: "8",
+    change: "+2",
+    trend: "up",
+    icon: Clock,
+    details: [
+      { label: "초기 단계", value: "3개" },
+      { label: "진행 중", value: "4개" },
+      { label: "최종 단계", value: "1개" },
+    ],
+  },
+  {
+    title: "개발 완료",
+    value: "13",
+    change: "+5",
     trend: "up",
     icon: CheckCircle,
     details: [
-      { label: "완전 준수", value: "21개" },
-      { label: "부분 준수", value: "2개" },
-      { label: "미준수", value: "1개" },
+      { label: "이번 달 완료", value: "5개" },
+      { label: "승인 완료", value: "11개" },
+      { label: "출시 준비", value: "2개" },
     ],
   },
   {
-    title: "검토 필요",
+    title: "검토 대기",
     value: "3",
     change: "-1",
     trend: "down",
     icon: AlertTriangle,
     details: [
-      { label: "긴급", value: "1개" },
-      { label: "일반", value: "2개" },
-      { label: "예정", value: "0개" },
+      { label: "긴급 검토", value: "1개" },
+      { label: "일반 검토", value: "2개" },
+      { label: "재검토", value: "0개" },
     ],
   },
-  {
-    title: "이번 달 분석",
-    value: "18",
-    change: "+5",
-    trend: "up",
-    icon: Clock,
-    details: [
-      { label: "AI 분석", value: "15개" },
-      { label: "수동 분석", value: "3개" },
-      { label: "재분석", value: "2개" },
-    ],
-  },
-]
-
-const teamStats = [
-  { name: "김품질", role: "품질관리", tasks: 8, completed: 6 },
-  { name: "이관리", role: "법규검토", tasks: 5, completed: 4 },
-  { name: "박법규", role: "규정분석", tasks: 6, completed: 5 },
-  { name: "최분석", role: "데이터분석", tasks: 4, completed: 4 },
 ]
 
 export function DetailedStats() {

@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { Home, Package, Search, BarChart3, Bell, Settings, User, Scale, FileText, Plus } from "lucide-react"
+import { Home, Package, BarChart3, Bell, Settings, User, Scale, FileText, ChevronRight } from "lucide-react"
 
 import {
   Sidebar,
@@ -51,7 +51,6 @@ const data = {
         {
           title: "새 제품 등록",
           url: "#",
-          icon: Plus,
           section: "new-product",
         },
         {
@@ -80,7 +79,6 @@ const data = {
         {
           title: "법령 검색",
           url: "#",
-          icon: Search,
           section: "lawDetails",
         },
         {
@@ -105,41 +103,12 @@ const data = {
       url: "#",
       icon: BarChart3,
       section: "result",
-      items: [
-        {
-          title: "법규 준수 분석",
-          url: "#",
-          section: "result",
-        },
-        {
-          title: "영양성분 분석",
-          url: "#",
-          section: "result",
-        },
-        {
-          title: "AI 추천사항",
-          url: "#",
-          section: "result",
-        },
-      ],
     },
     {
       title: "보고서",
       url: "#",
       icon: FileText,
       section: "reports",
-      items: [
-        {
-          title: "분석 보고서",
-          url: "#",
-          section: "result",
-        },
-        {
-          title: "PDF 다운로드",
-          url: "#",
-          section: "result",
-        },
-      ],
     },
   ],
   navSecondary: [
@@ -154,7 +123,7 @@ const data = {
       title: "설정",
       url: "#",
       icon: Settings,
-      section: "profile",
+      section: "settings",
     },
   ],
 }
@@ -186,8 +155,39 @@ export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarP
           <SidebarGroupContent>
             <SidebarMenu>
               {data.navMain.map((item) => (
-                <Collapsible key={item.title} asChild defaultOpen={currentSection === item.section}>
-                  <SidebarMenuItem>
+                <SidebarMenuItem key={item.title}>
+                  {item.items?.length ? (
+                    <Collapsible defaultOpen={currentSection === item.section} className="group/collapsible">
+                      <CollapsibleTrigger asChild>
+                        <SidebarMenuButton
+                          tooltip={item.title}
+                          isActive={currentSection === item.section}
+                          onClick={() => onNavigate?.(item.section)}
+                        >
+                          <item.icon />
+                          <span>{item.title}</span>
+                          <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </SidebarMenuButton>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {item.items.map((subItem) => (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton
+                                asChild
+                                onClick={() => onNavigate?.(subItem.section)}
+                                isActive={currentSection === subItem.section}
+                              >
+                                <a href={subItem.url}>
+                                  <span>{subItem.title}</span>
+                                </a>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          ))}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ) : (
                     <SidebarMenuButton
                       asChild
                       tooltip={item.title}
@@ -199,29 +199,8 @@ export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarP
                         <span>{item.title}</span>
                       </a>
                     </SidebarMenuButton>
-                    {item.items?.length ? (
-                      <>
-                        <CollapsibleTrigger asChild>
-                          <SidebarMenuButton className="peer" />
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <SidebarMenuSub>
-                            {item.items.map((subItem) => (
-                              <SidebarMenuSubItem key={subItem.title}>
-                                <SidebarMenuSubButton asChild onClick={() => onNavigate?.(subItem.section)}>
-                                  <a href={subItem.url}>
-                                    {subItem.icon && <subItem.icon />}
-                                    <span>{subItem.title}</span>
-                                  </a>
-                                </SidebarMenuSubButton>
-                              </SidebarMenuSubItem>
-                            ))}
-                          </SidebarMenuSub>
-                        </CollapsibleContent>
-                      </>
-                    ) : null}
-                  </SidebarMenuItem>
-                </Collapsible>
+                  )}
+                </SidebarMenuItem>
               ))}
             </SidebarMenu>
           </SidebarGroupContent>

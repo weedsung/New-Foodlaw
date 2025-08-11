@@ -1,10 +1,11 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React from "react"
+
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -12,7 +13,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AppSidebar } from "@/components/app-sidebar"
 import { QuickActions } from "@/components/quick-actions"
-import { NotificationCenter } from "@/components/notification-center"
 import { DetailedStats } from "@/components/detailed-stats"
 import { ProductFormModal } from "@/components/product-form-modal"
 import {
@@ -50,6 +50,9 @@ import { aiService } from "@/lib/ai-service"
 import { pdfGenerator } from "@/lib/pdf-generator"
 import { exportService } from "@/lib/export-service"
 import { storage } from "@/lib/storage"
+import { SettingsPage } from "@/components/settings-page"
+import { useSettings } from "@/hooks/use-settings"
+import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 
 interface BlendingData {
   id: number
@@ -72,7 +75,7 @@ const SECTIONS = {
   RESULT: "result",
   LAW_UPDATES: "lawUpdates",
   LAW_DETAILS: "lawDetails",
-  PROFILE: "profile",
+  SETTINGS: "settings", // PROFILE에서 변경
 }
 
 export default function FoodLawSystem() {
@@ -108,42 +111,6 @@ export default function FoodLawSystem() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [validationErrors, setValidationErrors] = useState<string[]>([])
   const [notifications, setNotifications] = useState<any[]>([])
-
-  // 자동 저장 기능
-  useEffect(() => {
-    const autoSaveInterval = setInterval(() => {
-      if (currentProduct) {
-        const updatedProduct = {
-          ...currentProduct,
-          ingredients: blendingData,
-          productSpecs: productSpecData,
-          rawSpecs: rawSpecData,
-        }
-        updateProduct(currentProduct.id, updatedProduct)
-      }
-    }, 30000) // 30초마다 자동 저장
-
-    return () => clearInterval(autoSaveInterval)
-  }, [currentProduct, blendingData, productSpecData, rawSpecData])
-
-  // 실시간 알림 시뮬레이션
-  useEffect(() => {
-    const notificationInterval = setInterval(() => {
-      const randomNotifications = [
-        { type: "info", message: "새로운 법령 업데이트가 있습니다." },
-        { type: "warning", message: "검토가 필요한 제품이 있습니다." },
-        { type: "success", message: "분석이 완료되었습니다." },
-      ]
-
-      if (Math.random() > 0.8) {
-        // 20% 확률로 알림 생성
-        const notification = randomNotifications[Math.floor(Math.random() * randomNotifications.length)]
-        setNotifications((prev) => [...prev, { ...notification, id: Date.now(), timestamp: new Date() }])
-      }
-    }, 10000) // 10초마다 체크
-
-    return () => clearInterval(notificationInterval)
-  }, [])
 
   const showSection = (sectionId: string) => {
     if (sectionId === "new-product") {
@@ -359,24 +326,12 @@ export default function FoodLawSystem() {
   }
 
   const statistics = getStatistics()
+  const { settings } = useSettings()
 
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Enhanced Stats */}
       <DetailedStats />
-
-      {/* Main Content Grid - 차트 섹션 제거 */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left Column */}
-        <div className="lg:col-span-6 space-y-6">
-          <QuickActions />
-        </div>
-
-        {/* Right Column */}
-        <div className="lg:col-span-6 space-y-6">
-          <NotificationCenter />
-        </div>
-      </div>
 
       {/* Recent Works - Enhanced with Real Data */}
       <Card>
@@ -508,6 +463,11 @@ export default function FoodLawSystem() {
           )}
         </CardContent>
       </Card>
+
+      {/* Main Content Grid - QuickActions를 아래로 이동 */}
+      <div className="space-y-6">
+        <QuickActions />
+      </div>
     </div>
   )
 
@@ -1109,38 +1069,7 @@ export default function FoodLawSystem() {
     </div>
   )
 
-  const renderProfile = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-gray-900">프로필</h2>
-        <Button variant="outline" onClick={() => showSection(SECTIONS.DASHBOARD)}>
-          홈으로
-        </Button>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>사용자 정보</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label>이름</Label>
-              <Input value="홍길동" readOnly />
-            </div>
-            <div>
-              <Label>이메일</Label>
-              <Input value="hong@example.com" readOnly />
-            </div>
-            <div>
-              <Label>역할</Label>
-              <Input value="품질관리팀" readOnly />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  )
+  const renderSettings = () => <SettingsPage onClose={() => showSection(SECTIONS.DASHBOARD)} />
 
   const renderLawDetails = () => (
     <div className="space-y-6">
@@ -1180,7 +1109,7 @@ export default function FoodLawSystem() {
             <div className="text-gray-700 space-y-2">
               <p>1) 원료 등에 구비요건</p>
               <p className="pl-4">
-                (1) 식품의 제조에 사용하는 원료는 인체를 목적으로 채취, 취급, 가공, 정제 또는 모든 관련된 것이라야 한다.
+                (1) 식품의 제조에 사용하는 원료는 인체를 목표로 채취, 취급, 가공, 정제 또는 모든 관련된 것이라야 한다.
               </p>
               <p className="pl-4">
                 (2) 원료는 품질, 선도와 양호하고 부패·변질되거나, 유해물질 등이 오염되어 있지 아니한 것으로 인체상을
@@ -1194,7 +1123,7 @@ export default function FoodLawSystem() {
             <div className="text-gray-700 space-y-2">
               <p>1) 원료 등에 구비요건</p>
               <p className="pl-4">
-                (1) 식품의 제조에 사용하는 원료는 인체를 목적으로 채취, 취급, 가공, 정제 또는 모든 관련된 것이라야 한다.
+                (1) 식품의 제조에 사용하는 원료는 인체를 목표로 채취, 취급, 가공, 정제 또는 모든 관련된 것이라야 한다.
               </p>
               <p className="pl-4">
                 (2) 원료는 품질, 선도와 양호하고 부패·변질되거나, 유해물질 등이 오염되어 있지 아니한 것으로 인체상을
@@ -1220,14 +1149,26 @@ export default function FoodLawSystem() {
         return renderResult()
       case SECTIONS.LAW_UPDATES:
         return renderLawUpdates()
-      case SECTIONS.PROFILE:
-        return renderProfile()
       case SECTIONS.LAW_DETAILS:
         return renderLawDetails()
+      case SECTIONS.SETTINGS:
+        return renderSettings()
       default:
         return renderDashboard()
     }
   }
+
+  // 키보드 단축키 설정
+  const searchInputRef = React.useRef<HTMLInputElement>(null)
+
+  useKeyboardShortcuts({
+    onNavigate: showSection,
+    onSave: saveCurrentProduct,
+    onSearch: () => {
+      searchInputRef.current?.focus()
+    },
+    onNewProduct: () => setShowProductModal(true),
+  })
 
   return (
     <SidebarProvider>
@@ -1254,8 +1195,8 @@ export default function FoodLawSystem() {
                           ? "법령업데이트"
                           : currentSection === SECTIONS.LAW_DETAILS
                             ? "법령정보"
-                            : currentSection === SECTIONS.PROFILE
-                              ? "프로필"
+                            : currentSection === SECTIONS.SETTINGS
+                              ? "설정"
                               : "대시보드"}
                 </BreadcrumbPage>
               </BreadcrumbItem>
@@ -1265,6 +1206,7 @@ export default function FoodLawSystem() {
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
+                ref={searchInputRef}
                 placeholder="검색..."
                 className="pl-8 w-64"
                 value={searchQuery}
