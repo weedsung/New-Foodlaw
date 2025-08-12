@@ -9,12 +9,18 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Database, Bot, Scale, Calculator } from "lucide-react"
 
-interface NutritionItem {
-  category: string
-  unit: string
-  serving: number
-  standard: number
-  dailyValue: number
+interface NutritionRow {
+  id: number
+  name: string
+  ratio: number
+  sodium: number
+  carbs: number
+  sugars: number
+  fat: number
+  transFat: number
+  saturatedFat: number
+  cholesterol: number
+  protein: number
 }
 
 interface Step3NutritionProps {
@@ -22,20 +28,15 @@ interface Step3NutritionProps {
   mainIngredients: string
   productType: string
   totalWeight: number
-  nutrition: NutritionItem[]
-  onNutritionChange: (nutrition: NutritionItem[]) => void
+  nutrition: NutritionRow[]
+  onNutritionChange: (nutrition: NutritionRow[]) => void
 }
 
-const DEFAULT_NUTRITION: NutritionItem[] = [
-  { category: '열량', unit: 'kcal', serving: 0, standard: 0, dailyValue: 0 },
-  { category: '탄수화물', unit: 'g', serving: 0, standard: 0, dailyValue: 0 },
-  { category: '단백질', unit: 'g', serving: 0, standard: 0, dailyValue: 0 },
-  { category: '지방', unit: 'g', serving: 0, standard: 0, dailyValue: 0 },
-  { category: '나트륨', unit: 'mg', serving: 0, standard: 0, dailyValue: 0 },
-  { category: '당류', unit: 'g', serving: 0, standard: 0, dailyValue: 0 },
-  { category: '포화지방', unit: 'g', serving: 0, standard: 0, dailyValue: 0 },
-  { category: '트랜스지방', unit: 'g', serving: 0, standard: 0, dailyValue: 0 },
-  { category: '콜레스테롤', unit: 'mg', serving: 0, standard: 0, dailyValue: 0 },
+const DEFAULT_NUTRITION: NutritionRow[] = [
+  { id: 1, name: '제품1', ratio: 0.50, sodium: 155.00, carbs: 3.74, sugars: 0.91, fat: 2.57, transFat: 0.01, saturatedFat: 0.35, cholesterol: 0.00, protein: 4.84 },
+  { id: 2, name: '제품2', ratio: 0, sodium: 1330.00, carbs: 69.00, sugars: 7.00, fat: 3.00, transFat: 0, saturatedFat: 1.00, cholesterol: 0.00, protein: 9.00 },
+  { id: 3, name: '제품3', ratio: 0, sodium: 2.00, carbs: 2.35, sugars: 1.70, fat: 0.04, transFat: 0.00, saturatedFat: 0.01, cholesterol: 0.00, protein: 0.95 },
+  { id: 4, name: '제품4', ratio: 0.50, sodium: 0.00, carbs: 20.00, sugars: 5.00, fat: 46.00, transFat: 0.00, saturatedFat: 8.50, cholesterol: 0.00, protein: 28.00 },
 ]
 
 export function Step3Nutrition({
@@ -46,35 +47,24 @@ export function Step3Nutrition({
   nutrition,
   onNutritionChange
 }: Step3NutritionProps) {
-  const [localNutrition, setLocalNutrition] = useState<NutritionItem[]>(
+  const [localNutrition, setLocalNutrition] = useState<NutritionRow[]>(
     nutrition.length > 0 ? nutrition : DEFAULT_NUTRITION
   )
 
-  const updateNutrition = (index: number, field: keyof NutritionItem, value: number) => {
+  const updateNutrition = (index: number, field: keyof NutritionRow, value: number | string) => {
     const updatedNutrition = localNutrition.map((item, i) => {
       if (i === index) {
         const updated = { ...item, [field]: value }
         
-        // 1일 기준치 자동 계산 (예시)
-        if (field === 'serving') {
-          switch (item.category) {
-            case '열량':
-              updated.dailyValue = value > 0 ? Number(((value / 2000) * 100).toFixed(1)) : 0
-              break
-            case '탄수화물':
-              updated.dailyValue = value > 0 ? Number(((value / 324) * 100).toFixed(1)) : 0
-              break
-            case '단백질':
-              updated.dailyValue = value > 0 ? Number(((value / 55) * 100).toFixed(1)) : 0
-              break
-            case '지방':
-              updated.dailyValue = value > 0 ? Number(((value / 54) * 100).toFixed(1)) : 0
-              break
-            case '나트륨':
-              updated.dailyValue = value > 0 ? Number(((value / 2000) * 100).toFixed(1)) : 0
-              break
-            default:
-              updated.dailyValue = 0
+        // 배합비 100% 제한
+        if (field === 'ratio' && typeof value === 'number') {
+          const otherRatiosSum = localNutrition
+            .filter((_, idx) => idx !== index)
+            .reduce((sum, row) => sum + row.ratio, 0)
+          
+          const maxAllowedRatio = 100 - otherRatiosSum
+          if (value > maxAllowedRatio) {
+            updated.ratio = Math.max(0, maxAllowedRatio)
           }
         }
         
@@ -86,6 +76,68 @@ export function Step3Nutrition({
     setLocalNutrition(updatedNutrition)
     onNutritionChange(updatedNutrition)
   }
+
+  const addRow = () => {
+    const newRow: NutritionRow = {
+      id: Date.now(),
+      name: `제품${localNutrition.length + 1}`,
+      ratio: 0,
+      sodium: 0,
+      carbs: 0,
+      sugars: 0,
+      fat: 0,
+      transFat: 0,
+      saturatedFat: 0,
+      cholesterol: 0,
+      protein: 0
+    }
+    const updated = [...localNutrition, newRow]
+    setLocalNutrition(updated)
+    onNutritionChange(updated)
+  }
+
+  const deleteRow = (index: number) => {
+    if (localNutrition.length > 1) {
+      const updated = localNutrition.filter((_, i) => i !== index)
+      setLocalNutrition(updated)
+      onNutritionChange(updated)
+    }
+  }
+
+  // 100g 당 합산 계산
+  const calculate100gTotals = () => {
+    const totals = {
+      sodium: 0,
+      carbs: 0,
+      sugars: 0,
+      fat: 0,
+      transFat: 0,
+      saturatedFat: 0,
+      cholesterol: 0,
+      protein: 0
+    }
+
+    localNutrition.forEach(row => {
+      if (row.ratio > 0) {
+        const ratio = row.ratio / 100
+        totals.sodium += row.sodium * ratio
+        totals.carbs += row.carbs * ratio
+        totals.sugars += row.sugars * ratio
+        totals.fat += row.fat * ratio
+        totals.transFat += row.transFat * ratio
+        totals.saturatedFat += row.saturatedFat * ratio
+        totals.cholesterol += row.cholesterol * ratio
+        totals.protein += row.protein * ratio
+      }
+    })
+
+    return totals
+  }
+
+  const totals = calculate100gTotals()
+  const totalRatio = localNutrition.reduce((sum, row) => sum + row.ratio, 0)
+  const isRatioNearLimit = totalRatio > 95
+  const isRatioOverLimit = totalRatio > 100
 
   return (
     <Card className="border-primary/20">
@@ -134,59 +186,235 @@ export function Step3Nutrition({
 
         {/* 영양성분 입력 테이블 */}
         <div className="space-y-4">
-          <h4 className="text-lg font-semibold">영양성분 정보</h4>
+          <div className="flex justify-between items-center">
+            <h4 className="text-lg font-semibold">영양성분 정보</h4>
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={addRow}
+                className="text-green-600 border-green-300 hover:bg-green-50"
+              >
+                + 행 추가
+              </Button>
+            </div>
+          </div>
           
-          <div className="border rounded-lg overflow-hidden">
+          <div className="border rounded-lg overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="w-1/6 text-center">구분</TableHead>
-                  <TableHead className="w-1/6 text-center">단위</TableHead>
-                  <TableHead className="w-1/4 text-center">1회 제공량</TableHead>
-                  <TableHead className="w-1/4 text-center">영양소 기준치</TableHead>
-                  <TableHead className="w-1/6 text-center">1일 기준치(%)</TableHead>
+                  <TableHead className="text-center min-w-[80px]">제품명</TableHead>
+                  <TableHead className="text-center min-w-[80px]">배합비(%)</TableHead>
+                  <TableHead className="text-center min-w-[100px]">나트륨(mg)</TableHead>
+                  <TableHead className="text-center min-w-[100px]">탄수화물(g)</TableHead>
+                  <TableHead className="text-center min-w-[80px]">당류(g)</TableHead>
+                  <TableHead className="text-center min-w-[80px]">지방(g)</TableHead>
+                  <TableHead className="text-center min-w-[100px]">트랜스지방(g)</TableHead>
+                  <TableHead className="text-center min-w-[100px]">포화지방(g)</TableHead>
+                  <TableHead className="text-center min-w-[100px]">콜레스테롤(mg)</TableHead>
+                  <TableHead className="text-center min-w-[80px]">단백질(g)</TableHead>
+                  <TableHead className="text-center min-w-[60px]">삭제</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {localNutrition.map((item, index) => (
-                  <TableRow key={item.category}>
-                    <TableCell className="text-center font-medium">
-                      {item.category}
-                    </TableCell>
-                    <TableCell className="text-center text-muted-foreground">
-                      {item.unit}
-                    </TableCell>
-                    <TableCell className="p-2">
+                {localNutrition.map((row, index) => (
+                  <TableRow key={row.id}>
+                    <TableCell className="p-1">
                       <Input
-                        type="number"
-                        step="0.1"
-                        placeholder="0"
-                        value={item.serving || ''}
-                        onChange={(e) => updateNutrition(index, 'serving', Number(e.target.value))}
-                        className="text-center border-0 bg-transparent focus-visible:ring-1"
+                        type="text"
+                        value={row.name}
+                        onChange={(e) => updateNutrition(index, 'name', e.target.value)}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
                       />
                     </TableCell>
-                    <TableCell className="p-2">
+                    <TableCell className="p-1">
                       <Input
                         type="number"
-                        step="0.1"
-                        placeholder="0"
-                        value={item.standard || ''}
-                        onChange={(e) => updateNutrition(index, 'standard', Number(e.target.value))}
-                        className="text-center border-0 bg-muted/50 focus-visible:ring-1"
+                        step="0.01"
+                        value={row.ratio || ''}
+                        onChange={(e) => updateNutrition(index, 'ratio', Number(e.target.value))}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
                       />
                     </TableCell>
-                    <TableCell className="p-2">
+                    <TableCell className="p-1">
                       <Input
                         type="number"
-                        step="0.1"
-                        value={item.dailyValue || ''}
-                        readOnly
-                        className="text-center border-0 bg-muted/50 focus-visible:ring-0 font-medium"
+                        step="0.01"
+                        value={row.sodium || ''}
+                        onChange={(e) => updateNutrition(index, 'sodium', Number(e.target.value))}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
                       />
+                    </TableCell>
+                    <TableCell className="p-1">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={row.carbs || ''}
+                        onChange={(e) => updateNutrition(index, 'carbs', Number(e.target.value))}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
+                      />
+                    </TableCell>
+                    <TableCell className="p-1">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={row.sugars || ''}
+                        onChange={(e) => updateNutrition(index, 'sugars', Number(e.target.value))}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
+                      />
+                    </TableCell>
+                    <TableCell className="p-1">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={row.fat || ''}
+                        onChange={(e) => updateNutrition(index, 'fat', Number(e.target.value))}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
+                      />
+                    </TableCell>
+                    <TableCell className="p-1">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={row.transFat || ''}
+                        onChange={(e) => updateNutrition(index, 'transFat', Number(e.target.value))}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
+                      />
+                    </TableCell>
+                    <TableCell className="p-1">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={row.saturatedFat || ''}
+                        onChange={(e) => updateNutrition(index, 'saturatedFat', Number(e.target.value))}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
+                      />
+                    </TableCell>
+                    <TableCell className="p-1">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={row.cholesterol || ''}
+                        onChange={(e) => updateNutrition(index, 'cholesterol', Number(e.target.value))}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
+                      />
+                    </TableCell>
+                    <TableCell className="p-1">
+                      <Input
+                        type="number"
+                        step="0.01"
+                        value={row.protein || ''}
+                        onChange={(e) => updateNutrition(index, 'protein', Number(e.target.value))}
+                        className="text-center text-xs border-0 bg-transparent focus-visible:ring-1 h-8"
+                      />
+                    </TableCell>
+                    <TableCell className="p-2 text-center">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteRow(index)}
+                        disabled={localNutrition.length <= 1}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50 w-8 h-8 p-0"
+                      >
+                        ×
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
+                
+                {/* 100g 당 합산 행 */}
+                <TableRow className={`border-t-2 ${
+                  isRatioOverLimit 
+                    ? 'bg-red-50 dark:bg-red-950/20 border-red-200' 
+                    : isRatioNearLimit 
+                      ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200'
+                      : 'bg-green-50 dark:bg-green-950/20 border-green-200'
+                }`}>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>
+                    제품 100g 당
+                  </TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>
+                    {totalRatio.toFixed(2)}%
+                    {isRatioOverLimit && ' ⚠️'}
+                    {isRatioNearLimit && !isRatioOverLimit && ' ⚠️'}
+                  </TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>{totals.sodium.toFixed(2)}</TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>{totals.carbs.toFixed(2)}</TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>{totals.sugars.toFixed(2)}</TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>{totals.fat.toFixed(2)}</TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>{totals.transFat.toFixed(2)}</TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>{totals.saturatedFat.toFixed(2)}</TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>{totals.cholesterol.toFixed(2)}</TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>{totals.protein.toFixed(2)}</TableCell>
+                  <TableCell className={`text-center font-bold ${
+                    isRatioOverLimit 
+                      ? 'text-red-700' 
+                      : isRatioNearLimit 
+                        ? 'text-yellow-700'
+                        : 'text-green-700'
+                  }`}>-</TableCell>
+                </TableRow>
               </TableBody>
             </Table>
           </div>
@@ -225,50 +453,64 @@ export function Step3Nutrition({
           
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Badge variant="outline">
-              총 {localNutrition.filter(item => item.serving > 0).length}개 영양소 입력됨
+              총 {localNutrition.length}개 제품 입력됨
+            </Badge>
+            <Badge 
+              variant="outline" 
+              className={`${
+                isRatioOverLimit 
+                  ? 'bg-red-50 text-red-700 border-red-300' 
+                  : isRatioNearLimit 
+                    ? 'bg-yellow-50 text-yellow-700 border-yellow-300'
+                    : 'bg-green-50 text-green-700 border-green-300'
+              }`}
+            >
+              배합비 합계: {totalRatio.toFixed(2)}%
+              {isRatioOverLimit && ' ⚠️'}
+              {isRatioNearLimit && !isRatioOverLimit && ' ⚠️'}
             </Badge>
           </div>
         </div>
 
         {/* 영양성분 요약 */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+          <Card className="bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
             <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                {localNutrition[0]?.serving || 0}
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                {totals.sodium.toFixed(2)}
               </div>
-              <div className="text-xs text-blue-600 dark:text-blue-400">kcal</div>
-              <div className="text-xs text-muted-foreground">열량</div>
+              <div className="text-xs text-orange-600 dark:text-orange-400">mg</div>
+              <div className="text-xs text-muted-foreground">나트륨</div>
             </CardContent>
           </Card>
           
           <Card className="bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800">
             <CardContent className="p-3 text-center">
               <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                {localNutrition[1]?.serving || 0}
+                {totals.carbs.toFixed(2)}
               </div>
               <div className="text-xs text-green-600 dark:text-green-400">g</div>
               <div className="text-xs text-muted-foreground">탄수화물</div>
             </CardContent>
           </Card>
           
-          <Card className="bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800">
-            <CardContent className="p-3 text-center">
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                {localNutrition[2]?.serving || 0}
-              </div>
-              <div className="text-xs text-orange-600 dark:text-orange-400">g</div>
-              <div className="text-xs text-muted-foreground">단백질</div>
-            </CardContent>
-          </Card>
-          
           <Card className="bg-purple-50 dark:bg-purple-950/20 border-purple-200 dark:border-purple-800">
             <CardContent className="p-3 text-center">
               <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {localNutrition[3]?.serving || 0}
+                {totals.fat.toFixed(2)}
               </div>
               <div className="text-xs text-purple-600 dark:text-purple-400">g</div>
               <div className="text-xs text-muted-foreground">지방</div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+            <CardContent className="p-3 text-center">
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {totals.protein.toFixed(2)}
+              </div>
+              <div className="text-xs text-blue-600 dark:text-blue-400">g</div>
+              <div className="text-xs text-muted-foreground">단백질</div>
             </CardContent>
           </Card>
         </div>
@@ -277,9 +519,11 @@ export function Step3Nutrition({
         <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">💡 영양성분 입력 가이드</h5>
           <ul className="text-sm text-blue-700 dark:text-blue-200 space-y-1">
-            <li>• 1회 제공량을 입력하면 1일 기준치가 자동으로 계산됩니다.</li>
+            <li>• <strong>배합비</strong>를 입력하면 100g 당 영양성분이 자동으로 계산됩니다.</li>
+            <li>• <strong>배합비 합계는 100%를 초과할 수 없습니다.</strong> 95% 이상일 때 경고가 표시됩니다.</li>
             <li>• DB 연결을 통해 일반적인 식품의 영양성분을 불러올 수 있습니다.</li>
             <li>• AI 분석으로 재료 기반 영양성분을 추정할 수 있습니다.</li>
+            <li>• 행 추가/삭제가 가능하며, 정확한 배합비 입력이 중요합니다.</li>
           </ul>
         </div>
       </CardContent>

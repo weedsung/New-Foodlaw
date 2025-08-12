@@ -25,12 +25,18 @@ interface Ingredient {
   notes: string
 }
 
-interface NutritionItem {
-  category: string
-  unit: string
-  serving: number
-  standard: number
-  dailyValue: number
+interface NutritionRow {
+  id: number
+  name: string
+  ratio: number
+  sodium: number
+  carbs: number
+  sugars: number
+  fat: number
+  transFat: number
+  saturatedFat: number
+  cholesterol: number
+  protein: number
 }
 
 interface LabelingData {
@@ -55,7 +61,7 @@ interface ProductWizardData {
   productType: string
   totalWeight: number
   ingredients: Ingredient[]
-  nutrition: NutritionItem[]
+  nutrition: NutritionRow[]
   labeling: LabelingData
 }
 
