@@ -10,15 +10,53 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Save, X, Bot, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { 
+  Step1ProductInfo, 
+  Step2Ingredients, 
+  Step3Nutrition, 
+  Step4Labeling 
+} from "./steps"
+
+interface Ingredient {
+  id: string
+  name: string
+  weight: number
+  ratio: number
+  notes: string
+}
+
+interface NutritionItem {
+  category: string
+  unit: string
+  serving: number
+  standard: number
+  dailyValue: number
+}
+
+interface LabelingData {
+  productName: string
+  productType: string
+  ingredients: string
+  amount: string
+  expiry: string
+  packaging: string
+  reportNo: string
+  company: string
+  returnPolicy: string
+  storage: string
+  allergy: string
+  customerService: string
+  additionalInfo: string
+}
 
 interface ProductWizardData {
   productName: string
   mainIngredients: string
   productType: string
   totalWeight: number
-  ingredients: any[]
-  nutrition: any[]
-  labeling: any[]
+  ingredients: Ingredient[]
+  nutrition: NutritionItem[]
+  labeling: LabelingData
 }
 
 interface ProductWizardShadcnProps {
@@ -42,9 +80,26 @@ export function ProductWizardShadcn({
     totalWeight: 0,
     ingredients: [],
     nutrition: [],
-    labeling: [],
+    labeling: {
+      productName: "",
+      productType: "",
+      ingredients: "",
+      amount: "",
+      expiry: "",
+      packaging: "",
+      reportNo: "",
+      company: "",
+      returnPolicy: "",
+      storage: "",
+      allergy: "",
+      customerService: "",
+      additionalInfo: ""
+    },
     ...initialData
   })
+
+  const [showAIResult, setShowAIResult] = useState(false)
+  const [aiRecommendations, setAIRecommendations] = useState<string[]>([])
 
   const handleStepClick = (step: number) => {
     // 이전 단계로만 이동 가능 (나중에 검증 로직 추가)
@@ -71,6 +126,18 @@ export function ProductWizardShadcn({
 
   const updateWizardData = (field: keyof ProductWizardData, value: any) => {
     setWizardData(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handleAIAnalyze = () => {
+    setShowAIResult(true)
+    // 실제 환경에서는 AI API 호출
+    setTimeout(() => {
+      setAIRecommendations([
+        "두류가공품",
+        "즉석조리식품",
+        "기타가공품"
+      ])
+    }, 1500)
   }
 
   return (
@@ -124,155 +191,48 @@ export function ProductWizardShadcn({
         {/* Step Content */}
         <div className="space-y-6">
           {currentStep === 1 && (
-            <Card className="border-primary/20">
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Badge variant="default" className="w-6 h-6 p-0 rounded-full">1</Badge>
-                  제품 정보 입력
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="productName">제품명</Label>
-                    <Input
-                      id="productName"
-                      type="text" 
-                      placeholder="제품명을 입력하세요."
-                      value={wizardData.productName}
-                      onChange={(e) => updateWizardData('productName', e.target.value)}
-                      className="transition-all focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="mainIngredients">주요 성분</Label>
-                    <Input
-                      id="mainIngredients"
-                      type="text" 
-                      placeholder="주요 성분을 입력하세요."
-                      value={wizardData.mainIngredients}
-                      onChange={(e) => updateWizardData('mainIngredients', e.target.value)}
-                      className="transition-all focus:ring-2 focus:ring-primary/20"
-                    />
-                  </div>
-                </div>
-                
-                <Separator className="my-6" />
-                
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Button 
-                    type="button"
-                    className="flex-1 sm:flex-none"
-                    disabled={!wizardData.productName || !wizardData.mainIngredients}
-                  >
-                    <Bot className="mr-2 size-4" />
-                    AI 분석 시작
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <Step1ProductInfo
+              productName={wizardData.productName}
+              mainIngredients={wizardData.mainIngredients}
+              onProductNameChange={(value) => updateWizardData('productName', value)}
+              onMainIngredientsChange={(value) => updateWizardData('mainIngredients', value)}
+              onAnalyze={handleAIAnalyze}
+              showAIResult={showAIResult}
+              aiRecommendations={aiRecommendations}
+            />
           )}
 
           {currentStep === 2 && (
-            <Card className="border-primary/20">
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Badge variant="default" className="w-6 h-6 p-0 rounded-full">2</Badge>
-                  재료 입력
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <Card className="bg-muted/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base">제품 기본 정보</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">제품명:</span>
-                        <span className="font-medium">{wizardData.productName || '-'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">제품유형:</span>
-                        <span className="font-medium">{wizardData.productType || '-'}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">총 중량:</span>
-                        <span className="font-medium">{wizardData.totalWeight}g</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="bg-muted/50">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base">주요 성분</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-sm text-muted-foreground">
-                        {wizardData.mainIngredients || '입력된 주요 성분이 없습니다.'}
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-lg font-medium mb-2">재료 입력 테이블</p>
-                  <p className="text-sm">동적 테이블, 행 추가/삭제, AI 자동채우기 기능이 구현될 예정입니다.</p>
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    <Badge variant="outline">동적 테이블</Badge>
-                    <Badge variant="outline">행 추가/삭제</Badge>
-                    <Badge variant="outline">AI 자동채우기</Badge>
-                    <Badge variant="outline">법령 분석</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Step2Ingredients
+              productName={wizardData.productName}
+              mainIngredients={wizardData.mainIngredients}
+              productType={wizardData.productType}
+              ingredients={wizardData.ingredients}
+              onIngredientsChange={(ingredients) => updateWizardData('ingredients', ingredients)}
+              onTotalWeightChange={(weight) => updateWizardData('totalWeight', weight)}
+            />
           )}
 
           {currentStep === 3 && (
-            <Card className="border-primary/20">
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Badge variant="default" className="w-6 h-6 p-0 rounded-full">3</Badge>
-                  영양성분 입력
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-lg font-medium mb-2">영양성분 입력</p>
-                  <p className="text-sm">열량, 탄수화물, 단백질, 지방, 나트륨 등의 영양성분을 입력할 수 있습니다.</p>
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    <Badge variant="outline">영양성분 테이블</Badge>
-                    <Badge variant="outline">DB 연결</Badge>
-                    <Badge variant="outline">AI 분석</Badge>
-                    <Badge variant="outline">자동 계산</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Step3Nutrition
+              productName={wizardData.productName}
+              mainIngredients={wizardData.mainIngredients}
+              productType={wizardData.productType}
+              totalWeight={wizardData.totalWeight}
+              nutrition={wizardData.nutrition}
+              onNutritionChange={(nutrition) => updateWizardData('nutrition', nutrition)}
+            />
           )}
 
           {currentStep === 4 && (
-            <Card className="border-primary/20">
-              <CardHeader className="border-b">
-                <CardTitle className="flex items-center gap-2">
-                  <Badge variant="default" className="w-6 h-6 p-0 rounded-full">4</Badge>
-                  표시사항
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="text-center py-12 text-muted-foreground">
-                  <p className="text-lg font-medium mb-2">표시사항 관리</p>
-                  <p className="text-sm">제품 라벨링에 필요한 모든 표시사항을 관리할 수 있습니다.</p>
-                  <div className="mt-4 flex flex-wrap justify-center gap-2">
-                    <Badge variant="outline">표시사항 미리보기</Badge>
-                    <Badge variant="outline">표시사항 작성</Badge>
-                    <Badge variant="outline">AI 식품유형 분석</Badge>
-                    <Badge variant="outline">법령 분석</Badge>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <Step4Labeling
+              productName={wizardData.productName}
+              mainIngredients={wizardData.mainIngredients}
+              productType={wizardData.productType}
+              totalWeight={wizardData.totalWeight}
+              labeling={wizardData.labeling}
+              onLabelingChange={(labeling) => updateWizardData('labeling', labeling)}
+            />
           )}
         </div>
 

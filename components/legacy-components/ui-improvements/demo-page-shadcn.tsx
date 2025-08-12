@@ -95,23 +95,23 @@ export function DemoPageShadcn() {
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <span className="text-sm font-medium">재료 입력 (Step 2)</span>
-                  <Badge variant="outline" className="h-5">
-                    <Clock className="w-3 h-3 mr-1" />
-                    예정
+                  <Badge variant="default" className="h-5">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    완료
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <span className="text-sm font-medium">영양성분 (Step 3)</span>
-                  <Badge variant="outline" className="h-5">
-                    <Clock className="w-3 h-3 mr-1" />
-                    예정
+                  <Badge variant="default" className="h-5">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    완료
                   </Badge>
                 </div>
                 <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                   <span className="text-sm font-medium">표시사항 (Step 4)</span>
-                  <Badge variant="outline" className="h-5">
-                    <Clock className="w-3 h-3 mr-1" />
-                    예정
+                  <Badge variant="default" className="h-5">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    완료
                   </Badge>
                 </div>
               </div>
@@ -127,8 +127,8 @@ export function DemoPageShadcn() {
                     shadcn/ui 완전 적용
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    cva 패턴, CSS 변수 기반 테마 시스템, new-york 스타일을 적용하여 
-                    기존 앱과 완벽하게 조화되는 디자인을 구현했습니다.
+                    모든 4단계가 완전히 구현되었습니다! 동적 테이블, 자동 계산, 
+                    탭 기반 UI 등 HTML 원본의 모든 기능을 shadcn/ui로 재구현했습니다.
                   </p>
                 </div>
               </div>
