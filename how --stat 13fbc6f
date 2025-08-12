@@ -1,0 +1,5 @@
+[33m13fbc6f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mKIM-MIN-SEONG[m[33m)[m 영양성분 테이블 구조 변경 및 배합비 100% 제한 기능 구현
+[33m7bdb3c7[m feat: add Step1ProductInfo component and refactor wizard structure
+[33mabbb29d[m feat: implement shadcn/ui based product wizard with step indicator
+[33mbb70af9[m 커서 룰 추가 및 마이그레이션 코드 업로드
+[33m53c859b[m feat: remove product form modal and create test-components backup folder

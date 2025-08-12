@@ -119,25 +119,8 @@ export function StepIndicatorShadcn({
     return onStepClick && stepNumber <= currentStep
   }
 
-  return (
-    <div className={cn("w-full max-w-4xl mx-auto space-y-8", className)}>
-      {/* Progress Bar */}
-      {showProgress && (
-        <div className="space-y-2">
-          <div className="relative h-2 w-full overflow-hidden rounded-full bg-secondary">
-            <div 
-              className="h-full w-full flex-1 bg-primary transition-all duration-500 ease-out"
-              style={{ transform: `translateX(-${100 - progress}%)` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs text-muted-foreground">
-            <span>시작</span>
-            <span>{Math.round(progress)}% 완료</span>
-            <span>완료</span>
-          </div>
-        </div>
-      )}
-
+    return (
+    <div className={cn("w-full max-w-4xl mx-auto", className)}>
       {/* Step Circles and Labels */}
       <div className="flex items-center justify-center">
         <div className="flex items-center space-x-2 overflow-x-auto max-w-full px-1">

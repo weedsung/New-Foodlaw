@@ -1,43 +1,127 @@
 "use client"
 
-import React from "react"
+import React, { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Bot, Lightbulb, AlertCircle } from "lucide-react"
+import { Bot, Lightbulb, AlertCircle, ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface Step1ProductInfoProps {
   productName: string
-  mainIngredients: string
+  productType: string
   onProductNameChange: (value: string) => void
-  onMainIngredientsChange: (value: string) => void
-  onAnalyze?: () => void
+  onProductTypeChange: (value: string) => void
+  onAnalyze?: (ingredients: string) => void
+  onDirectInput?: () => void
   showAIResult?: boolean
+  showDirectInput?: boolean
   aiRecommendations?: string[]
 }
 
 export function Step1ProductInfo({
   productName,
-  mainIngredients,
+  productType,
   onProductNameChange,
-  onMainIngredientsChange,
+  onProductTypeChange,
   onAnalyze,
+  onDirectInput,
   showAIResult = false,
+  showDirectInput = false,
   aiRecommendations = []
 }: Step1ProductInfoProps) {
-  const isAnalyzeDisabled = !productName.trim() || !mainIngredients.trim()
+  const [analysisIngredients, setAnalysisIngredients] = useState("")
+  const [searchInput, setSearchInput] = useState("")
+  const [showDropdown, setShowDropdown] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+  const isAnalyzeDisabled = !productName.trim() || !analysisIngredients.trim()
+
+  // 외부 클릭시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  // 직접 입력 모드 전환시 검색 입력값 초기화
+  useEffect(() => {
+    if (showDirectInput) {
+      setSearchInput(productType || "")
+    }
+  }, [showDirectInput, productType])
+
+  const productTypes = [
+    { value: "두류가공품", label: "두류가공품" },
+    { value: "즉석조리식품", label: "즉석조리식품" },
+    { value: "기타가공품", label: "기타가공품" },
+    { value: "과자류", label: "과자류" },
+    { value: "음료류", label: "음료류" },
+    { value: "유제품류", label: "유제품류" },
+    { value: "육류가공품", label: "육류가공품" },
+    { value: "수산가공품", label: "수산가공품" },
+    { value: "면류", label: "면류" },
+    { value: "빵류", label: "빵류" },
+    { value: "떡류", label: "떡류" },
+    { value: "식용유지류", label: "식용유지류" },
+    { value: "조미료", label: "조미료" },
+    { value: "드레싱류", label: "드레싱류" },
+    { value: "김치류", label: "김치류" },
+    { value: "젓갈류", label: "젓갈류" },
+    { value: "장류", label: "장류" },
+    { value: "절임식품", label: "절임식품" },
+    { value: "조림식품", label: "조림식품" },
+    { value: "주류", label: "주류" },
+    { value: "차류", label: "차류" },
+    { value: "커피", label: "커피" },
+    { value: "건강기능식품", label: "건강기능식품" },
+    { value: "특수용도식품", label: "특수용도식품" },
+    { value: "기타식품", label: "기타식품" },
+  ]
+
+  // 검색 필터링
+  const filteredTypes = productTypes.filter(type =>
+    type.label.toLowerCase().includes(searchInput.toLowerCase())
+  )
+
+  const handleSelectType = (type: string) => {
+    onProductTypeChange?.(type)
+    setSearchInput(type)
+    setShowDropdown(false)
+  }
+
+  const handleInputChange = (value: string) => {
+    setSearchInput(value)
+    if (!showDirectInput) return
+    
+    // 정확히 일치하는 항목이 있으면 자동 선택
+    const exactMatch = productTypes.find(type => 
+      type.label.toLowerCase() === value.toLowerCase()
+    )
+    if (exactMatch) {
+      onProductTypeChange?.(exactMatch.value)
+    } else {
+      onProductTypeChange?.("")
+    }
+  }
 
   return (
     <div className="space-y-6">
       {/* 제품 정보 입력 카드 */}
       <Card className="border-primary/20">
         <CardHeader className="border-b">
-          <CardTitle className="flex items-center gap-2">
-            <Badge variant="default" className="w-6 h-6 p-0 rounded-full">1</Badge>
-            제품 정보 입력
+          <CardTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge variant="default" className="w-6 h-6 p-0 rounded-full">1</Badge>
+              제품 정보 입력
+            </div>
+            <Badge variant="secondary" className="text-xs">1/4 단계</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 space-y-6">
@@ -54,38 +138,116 @@ export function Step1ProductInfo({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="mainIngredients">주요 성분</Label>
-              <Input
-                id="mainIngredients"
-                type="text" 
-                placeholder="주요 성분을 입력하세요."
-                value={mainIngredients}
-                onChange={(e) => onMainIngredientsChange(e.target.value)}
-                className="transition-all focus:ring-2 focus:ring-primary/20"
-              />
+              <Label htmlFor="productType">제품 유형</Label>
+              {showDirectInput ? (
+                <div ref={dropdownRef} className="relative">
+                  <div className="relative">
+                    <Input
+                      id="productType"
+                      type="text"
+                      placeholder="제품 유형을 검색하거나 선택하세요..."
+                      value={searchInput}
+                      onChange={(e) => handleInputChange(e.target.value)}
+                      onFocus={() => setShowDropdown(true)}
+                      className="pr-10 transition-all focus:ring-2 focus:ring-primary/20"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      onClick={() => setShowDropdown(!showDropdown)}
+                    >
+                      <ChevronDown className={cn(
+                        "h-4 w-4 transition-transform",
+                        showDropdown && "rotate-180"
+                      )} />
+                    </Button>
+                  </div>
+                  
+                  {showDropdown && (
+                    <div className="absolute z-50 w-full mt-1 max-h-60 overflow-auto bg-popover border border-border rounded-md shadow-lg">
+                      {filteredTypes.length > 0 ? (
+                        filteredTypes.map((type) => (
+                          <button
+                            key={type.value}
+                            type="button"
+                            className={cn(
+                              "w-full px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors",
+                              productType === type.value && "bg-accent text-accent-foreground"
+                            )}
+                            onClick={() => handleSelectType(type.value)}
+                          >
+                            {type.label}
+                          </button>
+                        ))
+                      ) : (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          검색 결과가 없습니다.
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Input
+                  id="productType"
+                  type="text" 
+                  placeholder="AI 분석 또는 직접 입력으로 설정됩니다"
+                  value={productType}
+                  readOnly
+                  className="bg-muted text-muted-foreground"
+                />
+              )}
             </div>
           </div>
           
           <Separator />
           
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Button 
-              type="button"
-              onClick={onAnalyze}
-              disabled={isAnalyzeDisabled}
-              className="flex-1 sm:flex-none"
-            >
-              <Bot className="mr-2 size-4" />
-              AI 분석 시작
-            </Button>
-            
-            {isAnalyzeDisabled && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <AlertCircle className="w-4 h-4" />
-                <span>제품명과 주요 성분을 모두 입력해주세요.</span>
+          {/* AI 분석 섹션 */}
+          {!showDirectInput && !showAIResult && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="analysisIngredients">주요 성분 (AI 분석용)</Label>
+                <Input
+                  id="analysisIngredients"
+                  type="text" 
+                  placeholder="AI 분석을 위한 주요 성분을 입력하세요 (예: 콩, 밀가루, 설탕)"
+                  value={analysisIngredients}
+                  onChange={(e) => setAnalysisIngredients(e.target.value)}
+                  className="transition-all focus:ring-2 focus:ring-primary/20"
+                />
               </div>
-            )}
-          </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Button 
+                  type="button"
+                  onClick={() => onAnalyze?.(analysisIngredients)}
+                  disabled={isAnalyzeDisabled}
+                  className="flex-1 sm:flex-none"
+                >
+                  <Bot className="mr-2 size-4" />
+                  AI 분석 시작
+                </Button>
+                
+                <Button 
+                  type="button"
+                  variant="outline"
+                  onClick={onDirectInput}
+                  className="flex-1 sm:flex-none"
+                >
+                  직접 입력
+                </Button>
+              </div>
+              
+              {isAnalyzeDisabled && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>제품명과 주요 성분을 모두 입력해주세요.</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* 입력 가이드 */}
           <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
@@ -95,8 +257,9 @@ export function Step1ProductInfo({
             </h5>
             <ul className="text-sm text-blue-700 dark:text-blue-200 space-y-1">
               <li>• <strong>제품명</strong>: 최종 판매될 제품의 정확한 이름을 입력하세요.</li>
-              <li>• <strong>주요 성분</strong>: 제품의 핵심 재료나 특징을 간단히 입력하세요.</li>
-              <li>• AI 분석을 통해 제품 유형과 카테고리를 자동으로 추천받을 수 있습니다.</li>
+              <li>• <strong>제품 유형</strong>: AI 분석 또는 직접 선택으로 설정할 수 있습니다.</li>
+              <li>• <strong>AI 분석</strong>: 주요 성분을 입력하면 적합한 제품 유형을 추천받을 수 있습니다.</li>
+              <li>• <strong>직접 입력</strong>: 드롭다운에서 제품 유형을 바로 선택할 수 있습니다.</li>
             </ul>
           </div>
         </CardContent>
@@ -172,10 +335,10 @@ export function Step1ProductInfo({
             <div className="flex flex-col items-end gap-2">
               <div className="flex gap-1">
                 <div className={`w-3 h-3 rounded-full ${productName ? 'bg-green-500' : 'bg-gray-300'}`} />
-                <div className={`w-3 h-3 rounded-full ${mainIngredients ? 'bg-green-500' : 'bg-gray-300'}`} />
+                <div className={`w-3 h-3 rounded-full ${productType ? 'bg-green-500' : 'bg-gray-300'}`} />
               </div>
               <Badge variant="outline">
-                {[productName, mainIngredients].filter(Boolean).length}/2 필수항목 완성
+                {[productName, productType].filter(Boolean).length}/2 필수항목 완성
               </Badge>
             </div>
           </div>

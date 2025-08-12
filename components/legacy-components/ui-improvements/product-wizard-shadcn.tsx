@@ -57,7 +57,6 @@ interface LabelingData {
 
 interface ProductWizardData {
   productName: string
-  mainIngredients: string
   productType: string
   totalWeight: number
   ingredients: Ingredient[]
@@ -81,7 +80,6 @@ export function ProductWizardShadcn({
   const [currentStep, setCurrentStep] = useState(1)
   const [wizardData, setWizardData] = useState<ProductWizardData>({
     productName: "",
-    mainIngredients: "",
     productType: "",
     totalWeight: 0,
     ingredients: [],
@@ -105,6 +103,7 @@ export function ProductWizardShadcn({
   })
 
   const [showAIResult, setShowAIResult] = useState(false)
+  const [showDirectInput, setShowDirectInput] = useState(false)
   const [aiRecommendations, setAIRecommendations] = useState<string[]>([])
 
   const handleStepClick = (step: number) => {
@@ -134,16 +133,24 @@ export function ProductWizardShadcn({
     setWizardData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleAIAnalyze = () => {
+  const handleAIAnalyze = (ingredients: string) => {
     setShowAIResult(true)
+    setShowDirectInput(false)
     // 실제 환경에서는 AI API 호출
+    console.log("AI 분석 재료:", ingredients)
     setTimeout(() => {
       setAIRecommendations([
         "두류가공품",
-        "즉석조리식품",
+        "즉석조리식품", 
         "기타가공품"
       ])
     }, 1500)
+  }
+
+  const handleDirectInput = () => {
+    setShowDirectInput(true)
+    setShowAIResult(false)
+    setAIRecommendations([])
   }
 
   return (
@@ -158,6 +165,9 @@ export function ProductWizardShadcn({
             <Badge variant="secondary" className="text-xs">
               제품 등록 마법사
             </Badge>
+            <div className="ml-4 text-sm text-muted-foreground">
+              {currentStep}/4 단계: {DEFAULT_STEPS[currentStep - 1]?.title || ''}
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <Button 
@@ -199,11 +209,13 @@ export function ProductWizardShadcn({
           {currentStep === 1 && (
             <Step1ProductInfo
               productName={wizardData.productName}
-              mainIngredients={wizardData.mainIngredients}
+              productType={wizardData.productType}
               onProductNameChange={(value) => updateWizardData('productName', value)}
-              onMainIngredientsChange={(value) => updateWizardData('mainIngredients', value)}
+              onProductTypeChange={(value) => updateWizardData('productType', value)}
               onAnalyze={handleAIAnalyze}
+              onDirectInput={handleDirectInput}
               showAIResult={showAIResult}
+              showDirectInput={showDirectInput}
               aiRecommendations={aiRecommendations}
             />
           )}
@@ -211,7 +223,7 @@ export function ProductWizardShadcn({
           {currentStep === 2 && (
             <Step2Ingredients
               productName={wizardData.productName}
-              mainIngredients={wizardData.mainIngredients}
+              mainIngredients={wizardData.ingredients.map(ing => `${ing.name}(${ing.ratio.toFixed(1)}%)`).join(', ')}
               productType={wizardData.productType}
               ingredients={wizardData.ingredients}
               onIngredientsChange={(ingredients) => updateWizardData('ingredients', ingredients)}
@@ -222,7 +234,7 @@ export function ProductWizardShadcn({
           {currentStep === 3 && (
             <Step3Nutrition
               productName={wizardData.productName}
-              mainIngredients={wizardData.mainIngredients}
+              mainIngredients={wizardData.ingredients.map(ing => `${ing.name}(${ing.ratio.toFixed(1)}%)`).join(', ')}
               productType={wizardData.productType}
               totalWeight={wizardData.totalWeight}
               nutrition={wizardData.nutrition}
@@ -233,7 +245,7 @@ export function ProductWizardShadcn({
           {currentStep === 4 && (
             <Step4Labeling
               productName={wizardData.productName}
-              mainIngredients={wizardData.mainIngredients}
+              mainIngredients={wizardData.ingredients.map(ing => `${ing.name}(${ing.ratio.toFixed(1)}%)`).join(', ')}
               productType={wizardData.productType}
               totalWeight={wizardData.totalWeight}
               labeling={wizardData.labeling}
