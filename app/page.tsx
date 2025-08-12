@@ -117,6 +117,10 @@ export default function FoodLawSystem() {
       console.log("새 제품 등록 클릭됨")
       return
     }
+    if (sectionId === "test-wizard") {
+      setCurrentSection("test-wizard")
+      return
+    }
     setCurrentSection(sectionId)
   }
 
