@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AppSidebar } from "@/components/app-sidebar"
 import { QuickActions } from "@/components/quick-actions"
 import { DetailedStats } from "@/components/detailed-stats"
-import { ProductFormModal } from "@/components/product-form-modal"
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -86,7 +86,6 @@ export default function FoodLawSystem() {
   const [currentProduct, setCurrentProduct] = useState<any>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
-  const [showProductModal, setShowProductModal] = useState(false)
   const [editingProduct, setEditingProduct] = useState<any>(null)
 
   const [blendingData, setBlendingData] = useState<BlendingData[]>([
@@ -114,7 +113,8 @@ export default function FoodLawSystem() {
 
   const showSection = (sectionId: string) => {
     if (sectionId === "new-product") {
-      setShowProductModal(true)
+      // TODO: 새 제품 등록 페이지로 이동하는 로직 추가
+      console.log("새 제품 등록 클릭됨")
       return
     }
     setCurrentSection(sectionId)
@@ -359,7 +359,7 @@ export default function FoodLawSystem() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => setShowProductModal(true)} size="sm">
+              <Button onClick={() => showSection("new-product")} size="sm">
                 <Plus className="h-4 w-4 mr-2" />새 제품
               </Button>
             </div>
@@ -436,7 +436,8 @@ export default function FoodLawSystem() {
                       size="sm"
                       onClick={() => {
                         setEditingProduct(product)
-                        setShowProductModal(true)
+                        // TODO: 제품 수정 페이지로 이동하는 로직 추가
+                        console.log("제품 수정 클릭됨:", product.name)
                       }}
                       className="bg-transparent"
                     >
@@ -1230,24 +1231,7 @@ export default function FoodLawSystem() {
         <div className="flex flex-1 flex-col gap-4 p-4">{renderCurrentSection()}</div>
       </SidebarInset>
 
-      {/* Product Form Modal */}
-      <ProductFormModal
-        isOpen={showProductModal}
-        onClose={() => {
-          setShowProductModal(false)
-          setEditingProduct(null)
-        }}
-        onSave={(productData) => {
-          if (editingProduct) {
-            updateProduct(editingProduct.id, productData)
-          } else {
-            addProduct(productData)
-          }
-          setShowProductModal(false)
-          setEditingProduct(null)
-        }}
-        product={editingProduct}
-      />
+
     </SidebarProvider>
   )
 }
