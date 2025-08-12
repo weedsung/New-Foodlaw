@@ -1,7 +1,12 @@
 "use client"
 
 import React from "react"
-import { Check } from "lucide-react"
+// import { Check } from "lucide-react"
+
+// Lucide React 아이콘 대신 간단한 체크 표시 사용
+const Check = ({ className }: { className?: string }) => (
+  <span className={className}>✓</span>
+)
 
 interface Step {
   id: number

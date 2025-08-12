@@ -2,7 +2,16 @@
 
 import React, { useState } from "react"
 import { StepIndicatorV1, DEFAULT_STEPS } from "./step-indicator-v1"
-import { Save, X } from "lucide-react"
+// import { Save, X } from "lucide-react"
+
+// 간단한 아이콘 대체
+const Save = ({ className }: { className?: string }) => (
+  <span className={className}>💾</span>
+)
+
+const X = ({ className }: { className?: string }) => (
+  <span className={className}>✕</span>
+)
 
 interface ProductWizardData {
   productName: string

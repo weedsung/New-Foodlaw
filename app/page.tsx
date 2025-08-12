@@ -53,6 +53,7 @@ import { storage } from "@/lib/storage"
 import { SettingsPage } from "@/components/settings-page"
 import { useSettings } from "@/hooks/use-settings"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
+import { DemoPageShadcn } from "@/components/legacy-components/ui-improvements/demo-page-shadcn"
 
 interface BlendingData {
   id: number
@@ -76,6 +77,7 @@ const SECTIONS = {
   LAW_UPDATES: "lawUpdates",
   LAW_DETAILS: "lawDetails",
   SETTINGS: "settings", // PROFILE에서 변경
+  WIZARD_DEMO: "wizard-demo", // 데모 테스트용
 }
 
 export default function FoodLawSystem() {
@@ -115,10 +117,6 @@ export default function FoodLawSystem() {
     if (sectionId === "new-product") {
       // TODO: 새 제품 등록 페이지로 이동하는 로직 추가
       console.log("새 제품 등록 클릭됨")
-      return
-    }
-    if (sectionId === "test-wizard") {
-      setCurrentSection("test-wizard")
       return
     }
     setCurrentSection(sectionId)
@@ -1158,6 +1156,8 @@ export default function FoodLawSystem() {
         return renderLawDetails()
       case SECTIONS.SETTINGS:
         return renderSettings()
+      case SECTIONS.WIZARD_DEMO:
+        return <DemoPageShadcn />
       default:
         return renderDashboard()
     }
@@ -1172,7 +1172,7 @@ export default function FoodLawSystem() {
     onSearch: () => {
       searchInputRef.current?.focus()
     },
-    onNewProduct: () => setShowProductModal(true),
+    onNewProduct: () => showSection(SECTIONS.WIZARD_DEMO),
   })
 
   return (
@@ -1202,7 +1202,9 @@ export default function FoodLawSystem() {
                             ? "법령정보"
                             : currentSection === SECTIONS.SETTINGS
                               ? "설정"
-                              : "대시보드"}
+                              : currentSection === SECTIONS.WIZARD_DEMO
+                                ? "마법사 데모"
+                                : "대시보드"}
                 </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
