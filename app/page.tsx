@@ -78,6 +78,10 @@ const SECTIONS = {
   LAW_DETAILS: "lawDetails",
   SETTINGS: "settings", // PROFILE에서 변경
   PRODUCT_WIZARD: "product-wizard", // 제품 등록 마법사
+  PRODUCT_WIZARD_STEP1: "product-wizard-step1", // 제품 정보
+  PRODUCT_WIZARD_STEP2: "product-wizard-step2", // 재료 입력
+  PRODUCT_WIZARD_STEP3: "product-wizard-step3", // 영양성분 입력
+  PRODUCT_WIZARD_STEP4: "product-wizard-step4", // 표시사항 입력
 }
 
 export default function FoodLawSystem() {
@@ -1074,7 +1078,7 @@ export default function FoodLawSystem() {
 
   const renderSettings = () => <SettingsPage onClose={() => showSection(SECTIONS.DASHBOARD)} />
 
-  const renderProductWizard = () => {
+  const renderProductWizard = (initialStep = 1) => {
     const handleSave = (data: any) => {
       console.log("제품 마법사에서 저장된 데이터:", data)
       alert("제품 정보가 저장되었습니다!")
@@ -1134,6 +1138,7 @@ export default function FoodLawSystem() {
         onSave={handleSave}
         onCancel={handleCancel}
         onComplete={handleComplete}
+        initialStep={initialStep}
         initialData={{
           productName: "",
           productType: "",
@@ -1244,6 +1249,14 @@ export default function FoodLawSystem() {
         return renderSettings()
       case SECTIONS.PRODUCT_WIZARD:
         return renderProductWizard()
+      case SECTIONS.PRODUCT_WIZARD_STEP1:
+        return renderProductWizard(1)
+      case SECTIONS.PRODUCT_WIZARD_STEP2:
+        return renderProductWizard(2)
+      case SECTIONS.PRODUCT_WIZARD_STEP3:
+        return renderProductWizard(3)
+      case SECTIONS.PRODUCT_WIZARD_STEP4:
+        return renderProductWizard(4)
       default:
         return renderDashboard()
     }
@@ -1290,7 +1303,15 @@ export default function FoodLawSystem() {
                               ? "설정"
                               : currentSection === SECTIONS.PRODUCT_WIZARD
                                 ? "제품 등록 마법사"
-                                : "대시보드"}
+                                : currentSection === SECTIONS.PRODUCT_WIZARD_STEP1
+                                  ? "1단계 - 제품 정보"
+                                  : currentSection === SECTIONS.PRODUCT_WIZARD_STEP2
+                                    ? "2단계 - 재료 입력"
+                                    : currentSection === SECTIONS.PRODUCT_WIZARD_STEP3
+                                      ? "3단계 - 영양성분 입력"
+                                      : currentSection === SECTIONS.PRODUCT_WIZARD_STEP4
+                                        ? "4단계 - 표시사항 입력"
+                                        : "대시보드"}
                 </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>

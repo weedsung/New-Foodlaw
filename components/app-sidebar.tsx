@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { Home, Package, BarChart3, Bell, Settings, User, Scale, FileText, ChevronRight, Rocket } from "lucide-react"
+import { Home, Package, BarChart3, Bell, Settings, User, Scale, FileText, ChevronRight, Rocket, Zap } from "lucide-react"
 
 import {
   Sidebar,
@@ -43,10 +43,10 @@ const data = {
       section: "dashboard",
     },
     {
-      title: "제품 관리",
+      title: "제품 개발",
       url: "#",
-      icon: Package,
-      section: "standards",
+      icon: Zap,
+      section: "product-development",
       items: [
         {
           title: "새 제품 등록",
@@ -54,17 +54,40 @@ const data = {
           section: "new-product",
         },
         {
+          title: "1단계 - 제품 정보",
+          url: "#",
+          section: "product-wizard-step1",
+        },
+        {
+          title: "2단계 - 재료 입력",
+          url: "#",
+          section: "product-wizard-step2",
+        },
+        {
+          title: "3단계 - 영양성분 입력",
+          url: "#",
+          section: "product-wizard-step3",
+        },
+        {
+          title: "4단계 - 표시사항 입력",
+          url: "#",
+          section: "product-wizard-step4",
+        },
+      ],
+    },
+    {
+      title: "제품 관리",
+      url: "#",
+      icon: Package,
+      section: "standards",
+      items: [
+        {
           title: "제품 목록",
           url: "#",
           section: "product-list",
         },
         {
-          title: "배합비 관리",
-          url: "#",
-          section: "standards",
-        },
-        {
-          title: "규격 관리",
+          title: "제품품질관리규격서",
           url: "#",
           section: "standards",
         },
@@ -181,13 +204,10 @@ export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarP
                           {item.items.map((subItem) => (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton
-                                asChild
                                 onClick={() => onNavigate?.(subItem.section)}
                                 isActive={currentSection === subItem.section}
                               >
-                                <a href={subItem.url}>
-                                  <span>{subItem.title}</span>
-                                </a>
+                                <span>{subItem.title}</span>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}
@@ -196,15 +216,12 @@ export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarP
                     </Collapsible>
                   ) : (
                     <SidebarMenuButton
-                      asChild
                       tooltip={item.title}
                       isActive={currentSection === item.section}
                       onClick={() => onNavigate?.(item.section)}
                     >
-                      <a href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </a>
+                      <item.icon />
+                      <span>{item.title}</span>
                     </SidebarMenuButton>
                   )}
                 </SidebarMenuItem>
@@ -219,16 +236,14 @@ export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarP
             <SidebarMenu>
               {data.navSecondary.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title} onClick={() => onNavigate?.(item.section)}>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                      {item.badge && (
-                        <Badge variant="destructive" className="ml-auto">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </a>
+                  <SidebarMenuButton tooltip={item.title} onClick={() => onNavigate?.(item.section)}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                    {item.badge && (
+                      <Badge variant="destructive" className="ml-auto">
+                        {item.badge}
+                      </Badge>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}

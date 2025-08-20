@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { StepIndicatorShadcn, DEFAULT_STEPS } from "./step-indicator-shadcn"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -69,6 +69,7 @@ interface ProductWizardShadcnProps {
   onCancel?: () => void
   onComplete?: (data: ProductWizardData) => void
   initialData?: Partial<ProductWizardData>
+  initialStep?: number
   className?: string
 }
 
@@ -77,9 +78,15 @@ export function ProductWizardShadcn({
   onCancel,
   onComplete,
   initialData = {},
+  initialStep = 1,
   className
 }: ProductWizardShadcnProps) {
-  const [currentStep, setCurrentStep] = useState(1)
+  const [currentStep, setCurrentStep] = useState(initialStep)
+  
+  // initialStep이 변경되면 currentStep을 업데이트
+  useEffect(() => {
+    setCurrentStep(initialStep)
+  }, [initialStep])
   const [wizardData, setWizardData] = useState<ProductWizardData>({
     productName: "",
     productType: "",
