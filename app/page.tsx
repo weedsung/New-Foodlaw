@@ -11,6 +11,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AppSidebar } from "@/components/app-sidebar"
 import { QuickActions } from "@/components/quick-actions"
 import { DetailedStats } from "@/components/detailed-stats"
@@ -82,6 +84,7 @@ const SECTIONS = {
   PRODUCT_WIZARD_STEP2: "product-wizard-step2", // 재료 입력
   PRODUCT_WIZARD_STEP3: "product-wizard-step3", // 영양성분 입력
   PRODUCT_WIZARD_STEP4: "product-wizard-step4", // 표시사항 입력
+  PRODUCT_LIST: "product-list", // 제품 목록
 }
 
 export default function FoodLawSystem() {
@@ -93,6 +96,12 @@ export default function FoodLawSystem() {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [editingProduct, setEditingProduct] = useState<any>(null)
+  const [newProductData, setNewProductData] = useState({
+    name: "",
+    category: "",
+    description: ""
+  })
+  const [showNewProductModal, setShowNewProductModal] = useState(false)
 
   const [blendingData, setBlendingData] = useState<BlendingData[]>([
     { id: 1, ingredient: "콩국", percentage: 74.1, weight: 700 },
@@ -118,11 +127,6 @@ export default function FoodLawSystem() {
   const [notifications, setNotifications] = useState<any[]>([])
 
   const showSection = (sectionId: string) => {
-    if (sectionId === "new-product") {
-      // 새 제품 등록 → 제품 등록 마법사로 리디렉션
-      setCurrentSection(SECTIONS.PRODUCT_WIZARD)
-      return
-    }
     setCurrentSection(sectionId)
   }
 
@@ -365,7 +369,7 @@ export default function FoodLawSystem() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={() => showSection("new-product")} size="sm">
+              <Button onClick={() => setShowNewProductModal(true)} size="sm">
                 <Plus className="h-4 w-4 mr-2" />새 제품
               </Button>
             </div>
@@ -1078,6 +1082,215 @@ export default function FoodLawSystem() {
 
   const renderSettings = () => <SettingsPage onClose={() => showSection(SECTIONS.DASHBOARD)} />
 
+
+
+  const handleNewProductSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!newProductData.name.trim()) {
+      alert("제품명을 입력해주세요.")
+      return
+    }
+
+    const productData = {
+      id: String(Date.now()),
+      name: newProductData.name,
+      category: newProductData.category || "미분류",
+      description: newProductData.description,
+      status: 'draft' as const,
+      lastModified: new Date().toISOString(),
+      complianceRate: 0,
+      ingredients: [],
+      productSpecs: [],
+      rawSpecs: []
+    }
+    
+    addProduct(productData)
+    setCurrentProduct(productData)
+    
+    setNotifications((prev: any) => [
+      ...prev,
+      {
+        id: Date.now(),
+        type: "success",
+        message: `"${newProductData.name}" 제품이 등록되었습니다.`,
+        timestamp: new Date(),
+      },
+    ])
+    
+    // 모달 닫기 및 폼 초기화
+    setShowNewProductModal(false)
+    setNewProductData({
+      name: "",
+      category: "",
+      description: ""
+    })
+  }
+
+  const handleNewProductCancel = () => {
+    setShowNewProductModal(false)
+    setNewProductData({
+      name: "",
+      category: "",
+      description: ""
+    })
+  }
+
+  const renderProductList = () => {
+    const handleEditProduct = (product: any) => {
+      setCurrentProduct(product)
+      showSection(SECTIONS.STANDARDS)
+    }
+
+    const handleDeleteProduct = (productId: string | number) => {
+      if (confirm("정말로 이 제품을 삭제하시겠습니까?")) {
+        deleteProduct(String(productId))
+        setNotifications((prev: any) => [
+          ...prev,
+          {
+            id: Date.now(),
+            type: "success",
+            message: "제품이 삭제되었습니다.",
+            timestamp: new Date(),
+          },
+        ])
+      }
+    }
+
+    const filteredProducts = searchQuery
+      ? searchProducts(searchQuery)
+      : statusFilter !== "all"
+      ? filterProducts({ status: statusFilter })
+      : products
+
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>제품 목록</CardTitle>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="제품명, 카테고리로 검색..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-48"
+                  />
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">전체</SelectItem>
+                      <SelectItem value="draft">초안</SelectItem>
+                      <SelectItem value="review">검토중</SelectItem>
+                      <SelectItem value="approved">승인됨</SelectItem>
+                      <SelectItem value="rejected">거부됨</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={() => setShowNewProductModal(true)} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />새 제품
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center p-8">
+                <RefreshCw className="h-6 w-6 animate-spin mr-2" />
+                로딩 중...
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredProducts.map((product: any) => (
+                  <div
+                    key={product.id}
+                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-semibold">
+                        {product.name.charAt(0)}
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-medium">{product.name}</h4>
+                          <Badge variant="outline" className="text-xs">
+                            {product.category}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <Badge
+                            variant={
+                              product.status === "approved"
+                                ? "default"
+                                : product.status === "review"
+                                  ? "secondary"
+                                  : product.status === "rejected"
+                                    ? "destructive"
+                                    : "outline"
+                            }
+                            className="text-xs"
+                          >
+                            {product.status === "draft" && "초안"}
+                            {product.status === "review" && "검토중"}
+                            {product.status === "approved" && "승인됨"}
+                            {product.status === "rejected" && "거부됨"}
+                          </Badge>
+                          {product.complianceRate && <span>법규 준수율: {product.complianceRate}%</span>}
+                        </div>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <span>수정: {new Date(product.lastModified).toLocaleString("ko-KR")}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditProduct(product)}
+                        className="bg-transparent"
+                      >
+                        보기
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingProduct(product)
+                          // TODO: 제품 수정 페이지로 이동하는 로직 추가
+                          console.log("제품 수정 클릭됨:", product.name)
+                        }}
+                        className="bg-transparent"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="bg-transparent text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+
+                {filteredProducts.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    {searchQuery || statusFilter !== "all" ? "검색 결과가 없습니다." : "등록된 제품이 없습니다."}
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const renderProductWizard = (initialStep = 1) => {
     const handleSave = (data: any) => {
       console.log("제품 마법사에서 저장된 데이터:", data)
@@ -1257,6 +1470,8 @@ export default function FoodLawSystem() {
         return renderProductWizard(3)
       case SECTIONS.PRODUCT_WIZARD_STEP4:
         return renderProductWizard(4)
+      case SECTIONS.PRODUCT_LIST:
+        return renderProductList()
       default:
         return renderDashboard()
     }
@@ -1309,9 +1524,11 @@ export default function FoodLawSystem() {
                                     ? "2단계 - 재료 입력"
                                     : currentSection === SECTIONS.PRODUCT_WIZARD_STEP3
                                       ? "3단계 - 영양성분 입력"
-                                      : currentSection === SECTIONS.PRODUCT_WIZARD_STEP4
-                                        ? "4단계 - 표시사항 입력"
-                                        : "대시보드"}
+                                                                              : currentSection === SECTIONS.PRODUCT_WIZARD_STEP4
+                                          ? "4단계 - 표시사항 입력"
+                                          : currentSection === SECTIONS.PRODUCT_LIST
+                                            ? "제품 목록"
+                                            : "대시보드"}
                 </BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
@@ -1344,6 +1561,57 @@ export default function FoodLawSystem() {
         <div className="flex flex-1 flex-col gap-4 p-4">{renderCurrentSection()}</div>
       </SidebarInset>
 
+      {/* 새 제품 등록 모달 */}
+      <Dialog open={showNewProductModal} onOpenChange={setShowNewProductModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>새 제품 등록</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleNewProductSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="modal-product-name">제품명 *</Label>
+              <Input
+                id="modal-product-name"
+                placeholder="제품명을 입력하세요"
+                value={newProductData.name}
+                onChange={(e) => setNewProductData(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="modal-category">식품 유형</Label>
+              <Input
+                id="modal-category"
+                placeholder="식품 유형을 입력하세요"
+                value={newProductData.category}
+                onChange={(e) => setNewProductData(prev => ({ ...prev, category: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="modal-description">제품 설명</Label>
+              <textarea
+                id="modal-description"
+                placeholder="제품에 대한 간단한 설명을 입력하세요"
+                value={newProductData.description}
+                onChange={(e) => setNewProductData(prev => ({ ...prev, description: e.target.value }))}
+                className="w-full min-h-[80px] p-3 border border-input rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={handleNewProductCancel}>
+                취소
+              </Button>
+              <Button type="submit">
+                <Plus className="mr-2 h-4 w-4" />
+                등록
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
 
     </SidebarProvider>
   )
