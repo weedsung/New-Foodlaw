@@ -237,6 +237,7 @@ export function ProductWizardShadcn({
               mainIngredients={wizardData.ingredients.map(ing => `${ing.name}(${ing.ratio.toFixed(1)}%)`).join(', ')}
               productType={wizardData.productType}
               totalWeight={wizardData.totalWeight}
+              ingredients={wizardData.ingredients}
               nutrition={wizardData.nutrition}
               onNutritionChange={(nutrition) => updateWizardData('nutrition', nutrition)}
             />

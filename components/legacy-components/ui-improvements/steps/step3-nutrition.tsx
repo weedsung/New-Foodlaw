@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -23,20 +23,29 @@ interface NutritionRow {
   protein: number
 }
 
+interface Ingredient {
+  id: string
+  name: string
+  weight: number
+  ratio: number
+  notes: string
+}
+
 interface Step3NutritionProps {
   productName: string
   mainIngredients: string
   productType: string
   totalWeight: number
+  ingredients: Ingredient[]
   nutrition: NutritionRow[]
   onNutritionChange: (nutrition: NutritionRow[]) => void
 }
 
 const DEFAULT_NUTRITION: NutritionRow[] = [
-  { id: 1, name: '제품1', ratio: 0.50, sodium: 155.00, carbs: 3.74, sugars: 0.91, fat: 2.57, transFat: 0.01, saturatedFat: 0.35, cholesterol: 0.00, protein: 4.84 },
-  { id: 2, name: '제품2', ratio: 0, sodium: 1330.00, carbs: 69.00, sugars: 7.00, fat: 3.00, transFat: 0, saturatedFat: 1.00, cholesterol: 0.00, protein: 9.00 },
-  { id: 3, name: '제품3', ratio: 0, sodium: 2.00, carbs: 2.35, sugars: 1.70, fat: 0.04, transFat: 0.00, saturatedFat: 0.01, cholesterol: 0.00, protein: 0.95 },
-  { id: 4, name: '제품4', ratio: 0.50, sodium: 0.00, carbs: 20.00, sugars: 5.00, fat: 46.00, transFat: 0.00, saturatedFat: 8.50, cholesterol: 0.00, protein: 28.00 },
+  { id: 1, name: '재료1', ratio: 0.50, sodium: 155.00, carbs: 3.74, sugars: 0.91, fat: 2.57, transFat: 0.01, saturatedFat: 0.35, cholesterol: 0.00, protein: 4.84 },
+  { id: 2, name: '재료2', ratio: 0, sodium: 1330.00, carbs: 69.00, sugars: 7.00, fat: 3.00, transFat: 0, saturatedFat: 1.00, cholesterol: 0.00, protein: 9.00 },
+  { id: 3, name: '재료3', ratio: 0, sodium: 2.00, carbs: 2.35, sugars: 1.70, fat: 0.04, transFat: 0.00, saturatedFat: 0.01, cholesterol: 0.00, protein: 0.95 },
+  { id: 4, name: '재료4', ratio: 0.50, sodium: 0.00, carbs: 20.00, sugars: 5.00, fat: 46.00, transFat: 0.00, saturatedFat: 8.50, cholesterol: 0.00, protein: 28.00 },
 ]
 
 export function Step3Nutrition({
@@ -44,12 +53,52 @@ export function Step3Nutrition({
   mainIngredients,
   productType,
   totalWeight,
+  ingredients,
   nutrition,
   onNutritionChange
 }: Step3NutritionProps) {
-  const [localNutrition, setLocalNutrition] = useState<NutritionRow[]>(
-    nutrition.length > 0 ? nutrition : DEFAULT_NUTRITION
-  )
+  // 재료 목록이 있으면 재료를 기반으로 초기화, 없으면 기본값 사용
+  const initializeNutrition = () => {
+    if (ingredients.length > 0) {
+      return ingredients.map((ingredient, index) => ({
+        id: index + 1,
+        name: ingredient.name || `재료${index + 1}`,
+        ratio: ingredient.ratio || 0,
+        sodium: 0,
+        carbs: 0,
+        sugars: 0,
+        fat: 0,
+        transFat: 0,
+        saturatedFat: 0,
+        cholesterol: 0,
+        protein: 0
+      }))
+    }
+    return nutrition.length > 0 ? nutrition : DEFAULT_NUTRITION
+  }
+
+  const [localNutrition, setLocalNutrition] = useState<NutritionRow[]>(initializeNutrition())
+
+  // 재료가 변경될 때마다 영양성분 테이블 업데이트
+  useEffect(() => {
+    if (ingredients.length > 0) {
+      const updatedNutrition = ingredients.map((ingredient, index) => ({
+        id: index + 1,
+        name: ingredient.name || `재료${index + 1}`,
+        ratio: ingredient.ratio || 0,
+        sodium: localNutrition[index]?.sodium || 0,
+        carbs: localNutrition[index]?.carbs || 0,
+        sugars: localNutrition[index]?.sugars || 0,
+        fat: localNutrition[index]?.fat || 0,
+        transFat: localNutrition[index]?.transFat || 0,
+        saturatedFat: localNutrition[index]?.saturatedFat || 0,
+        cholesterol: localNutrition[index]?.cholesterol || 0,
+        protein: localNutrition[index]?.protein || 0
+      }))
+      setLocalNutrition(updatedNutrition)
+      onNutritionChange(updatedNutrition)
+    }
+  }, [ingredients])
 
   const updateNutrition = (index: number, field: keyof NutritionRow, value: number | string) => {
     const updatedNutrition = localNutrition.map((item, i) => {
@@ -80,7 +129,7 @@ export function Step3Nutrition({
   const addRow = () => {
     const newRow: NutritionRow = {
       id: Date.now(),
-      name: `제품${localNutrition.length + 1}`,
+      name: `재료${localNutrition.length + 1}`,
       ratio: 0,
       sodium: 0,
       carbs: 0,
@@ -204,7 +253,7 @@ export function Step3Nutrition({
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
-                  <TableHead className="text-center min-w-[80px]">제품명</TableHead>
+                  <TableHead className="text-center min-w-[80px]">재료명</TableHead>
                   <TableHead className="text-center min-w-[80px]">배합비(%)</TableHead>
                   <TableHead className="text-center min-w-[100px]">나트륨(mg)</TableHead>
                   <TableHead className="text-center min-w-[100px]">탄수화물(g)</TableHead>
