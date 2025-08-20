@@ -317,7 +317,7 @@ export function Step4Labeling({
                               value={row.ingredient}
                               onChange={(e) => updateLabelRow(row.id, 'ingredient', e.target.value)}
                               placeholder="재료명"
-                              className="border-0 bg-transparent focus-visible:ring-1"
+                              className="text-center border-0 bg-transparent focus-visible:ring-1"
                             />
                           </TableCell>
                           <TableCell className="p-2">
@@ -325,7 +325,7 @@ export function Step4Labeling({
                               value={row.ratio}
                               onChange={(e) => updateLabelRow(row.id, 'ratio', e.target.value)}
                               placeholder="배합비"
-                              className="border-0 bg-transparent focus-visible:ring-1"
+                              className="text-center border-0 bg-transparent focus-visible:ring-1"
                             />
                           </TableCell>
                           <TableCell className="p-2">
@@ -333,7 +333,7 @@ export function Step4Labeling({
                               value={row.weight}
                               onChange={(e) => updateLabelRow(row.id, 'weight', e.target.value)}
                               placeholder="중량"
-                              className="border-0 bg-transparent focus-visible:ring-1"
+                              className="text-center border-0 bg-transparent focus-visible:ring-1"
                             />
                           </TableCell>
                           <TableCell className="p-2">
@@ -341,7 +341,7 @@ export function Step4Labeling({
                               value={row.foodType}
                               onChange={(e) => updateLabelRow(row.id, 'foodType', e.target.value)}
                               placeholder="식품유형"
-                              className="border-0 bg-transparent focus-visible:ring-1"
+                              className="text-center border-0 bg-transparent focus-visible:ring-1"
                             />
                           </TableCell>
                           <TableCell className="p-2">
@@ -349,7 +349,7 @@ export function Step4Labeling({
                               value={row.origin}
                               onChange={(e) => updateLabelRow(row.id, 'origin', e.target.value)}
                               placeholder="원산지"
-                              className="border-0 bg-transparent focus-visible:ring-1"
+                              className="text-center border-0 bg-transparent focus-visible:ring-1"
                             />
                           </TableCell>
                           <TableCell className="p-2">
@@ -357,7 +357,7 @@ export function Step4Labeling({
                               value={row.allergy}
                               onChange={(e) => updateLabelRow(row.id, 'allergy', e.target.value)}
                               placeholder="알레르기"
-                              className="border-0 bg-transparent focus-visible:ring-1"
+                              className="text-center border-0 bg-transparent focus-visible:ring-1"
                             />
                           </TableCell>
                         </TableRow>
@@ -412,12 +412,12 @@ export function Step4Labeling({
         </Tabs>
 
         {/* 표시사항 완성도 표시 */}
-        <Card className="bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800">
+        <Card className="mt-6 bg-muted/30">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h5 className="font-medium text-blue-900 dark:text-blue-100">표시사항 완성도</h5>
-                <p className="text-sm text-blue-700 dark:text-blue-200">
+                <h5 className="font-medium">📋 표시사항 완성도</h5>
+                <p className="text-sm text-muted-foreground">
                   필수 항목이 모두 입력되었는지 확인하세요.
                 </p>
               </div>
@@ -453,10 +453,10 @@ export function Step4Labeling({
         </Card>
 
         {/* 도움말 */}
-        <div className="p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
           <h5 className="font-medium text-blue-900 dark:text-blue-100 mb-2">💡 표시사항 작성 가이드</h5>
           <ul className="text-sm text-blue-700 dark:text-blue-200 space-y-1">
-            <li>• 제품명, 식품유형, 원료명, 내용량, 업소명은 필수 입력 항목입니다.</li>
+            <li>• <strong>제품명, 식품유형, 원료명, 내용량, 업소명</strong>은 필수 입력 항목입니다.</li>
             <li>• AI 식품유형 분석으로 재료별 식품유형을 자동 분류할 수 있습니다.</li>
             <li>• 법령 분석으로 표시사항 규정 준수 여부를 확인할 수 있습니다.</li>
           </ul>
