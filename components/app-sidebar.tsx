@@ -26,6 +26,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onNavigate?: (section: string) => void
+  onNavigateWizardStep?: (step: number) => void
   currentSection?: string
 }
 
@@ -158,7 +159,7 @@ const data = {
   ],
 }
 
-export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarProps) {
+export function AppSidebar({ onNavigate, onNavigateWizardStep, currentSection, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -204,7 +205,20 @@ export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarP
                           {item.items.map((subItem) => (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton
-                                onClick={() => onNavigate?.(subItem.section)}
+                                onClick={() => {
+                                  // 새 제품 등록인 경우 모달 열기
+                                  if (subItem.section === 'new-product') {
+                                    // 새 제품 등록 모달을 열기 위한 특별한 액션
+                                    onNavigate?.('new-product-modal')
+                                  }
+                                  // 마법사 단계인 경우 onNavigateWizardStep 사용
+                                  else if (subItem.section.startsWith('product-wizard-step')) {
+                                    const step = parseInt(subItem.section.replace('product-wizard-step', ''))
+                                    onNavigateWizardStep?.(step)
+                                  } else {
+                                    onNavigate?.(subItem.section)
+                                  }
+                                }}
                                 isActive={currentSection === subItem.section}
                               >
                                 <span>{subItem.title}</span>
