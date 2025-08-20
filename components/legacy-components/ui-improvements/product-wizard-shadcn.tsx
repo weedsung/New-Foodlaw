@@ -67,6 +67,7 @@ interface ProductWizardData {
 interface ProductWizardShadcnProps {
   onSave?: (data: ProductWizardData) => void
   onCancel?: () => void
+  onComplete?: (data: ProductWizardData) => void
   initialData?: Partial<ProductWizardData>
   className?: string
 }
@@ -74,6 +75,7 @@ interface ProductWizardShadcnProps {
 export function ProductWizardShadcn({ 
   onSave, 
   onCancel,
+  onComplete,
   initialData = {},
   className
 }: ProductWizardShadcnProps) {
@@ -127,6 +129,11 @@ export function ProductWizardShadcn({
 
   const handleSave = () => {
     onSave?.(wizardData)
+  }
+
+  const handleComplete = () => {
+    // 4단계 완료 시 품질관리로 이동
+    onComplete?.(wizardData)
   }
 
   const updateWizardData = (field: keyof ProductWizardData, value: any) => {
@@ -271,14 +278,24 @@ export function ProductWizardShadcn({
             <span>단계 {currentStep} / {DEFAULT_STEPS.length}</span>
           </div>
           
-          <Button 
-            onClick={handleNext}
-            disabled={currentStep === DEFAULT_STEPS.length}
-            className="flex items-center gap-2"
-          >
-            다음 단계
-            <ChevronRight className="size-4" />
-          </Button>
+          {currentStep === DEFAULT_STEPS.length ? (
+            <Button 
+              onClick={handleComplete}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+            >
+              제품품질관리규격화
+              <ChevronRight className="size-4" />
+            </Button>
+          ) : (
+            <Button 
+              onClick={handleNext}
+              disabled={currentStep === DEFAULT_STEPS.length}
+              className="flex items-center gap-2"
+            >
+              다음 단계
+              <ChevronRight className="size-4" />
+            </Button>
+          )}
         </div>
       </main>
     </div>

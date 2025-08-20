@@ -1,7 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { Home, Package, BarChart3, Bell, Settings, User, Scale, FileText, ChevronRight, TestTube } from "lucide-react"
+import { Home, Package, BarChart3, Bell, Settings, User, Scale, FileText, ChevronRight, Rocket } from "lucide-react"
 
 import {
   Sidebar,
@@ -126,10 +126,10 @@ const data = {
       section: "settings",
     },
     {
-      title: "🧪 마법사 데모",
+      title: "🚀 제품 등록 마법사",
       url: "#",
-      icon: TestTube,
-      section: "wizard-demo",
+      icon: Rocket,
+      section: "product-wizard",
       badge: "NEW",
     },
   ],

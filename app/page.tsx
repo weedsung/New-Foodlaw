@@ -53,7 +53,7 @@ import { storage } from "@/lib/storage"
 import { SettingsPage } from "@/components/settings-page"
 import { useSettings } from "@/hooks/use-settings"
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
-import { DemoPageShadcn } from "@/components/legacy-components/ui-improvements/demo-page-shadcn"
+import { ProductWizardShadcn } from "@/components/legacy-components/ui-improvements/product-wizard-shadcn"
 
 interface BlendingData {
   id: number
@@ -77,7 +77,7 @@ const SECTIONS = {
   LAW_UPDATES: "lawUpdates",
   LAW_DETAILS: "lawDetails",
   SETTINGS: "settings", // PROFILE에서 변경
-  WIZARD_DEMO: "wizard-demo", // 데모 테스트용
+  PRODUCT_WIZARD: "product-wizard", // 제품 등록 마법사
 }
 
 export default function FoodLawSystem() {
@@ -115,8 +115,8 @@ export default function FoodLawSystem() {
 
   const showSection = (sectionId: string) => {
     if (sectionId === "new-product") {
-      // TODO: 새 제품 등록 페이지로 이동하는 로직 추가
-      console.log("새 제품 등록 클릭됨")
+      // 새 제품 등록 → 제품 등록 마법사로 리디렉션
+      setCurrentSection(SECTIONS.PRODUCT_WIZARD)
       return
     }
     setCurrentSection(sectionId)
@@ -1074,6 +1074,92 @@ export default function FoodLawSystem() {
 
   const renderSettings = () => <SettingsPage onClose={() => showSection(SECTIONS.DASHBOARD)} />
 
+  const renderProductWizard = () => {
+    const handleSave = (data: any) => {
+      console.log("제품 마법사에서 저장된 데이터:", data)
+      alert("제품 정보가 저장되었습니다!")
+    }
+
+    const handleCancel = () => {
+      console.log("제품 마법사 취소됨")
+      showSection(SECTIONS.DASHBOARD)
+    }
+
+    const handleComplete = (data: any) => {
+      console.log("식품개발 4단계 완료! 제품품질관리규격화로 이동:", data)
+      
+      // 1. 제품 데이터 저장
+      const productData = {
+        ...data,
+        id: Date.now(),
+        name: data.productName || "새 제품",
+        category: data.productType || "미분류",
+        status: 'draft',
+        assignee: '개발자',
+        lastModified: new Date().toISOString(),
+        complianceRate: 0 // 품질관리에서 설정될 예정
+      }
+      
+      addProduct(productData)
+      setCurrentProduct(productData)
+      
+      // 2. 마법사 데이터를 품질관리 섹션에서 사용할 수 있도록 설정
+      // 배합비 데이터 매핑
+      if (data.ingredients && data.ingredients.length > 0) {
+        setBlendingData(data.ingredients.map((ing: any, index: number) => ({
+          id: index + 1,
+          ingredient: ing.name || `재료${index + 1}`,
+          percentage: ing.ratio || 0,
+          weight: ing.weight || 0
+        })))
+      }
+      
+      // 3. 제품품질관리규격화 섹션으로 이동
+      showSection(SECTIONS.STANDARDS)
+      
+      // 4. 성공 메시지
+      setNotifications((prev: any) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: "success",
+          message: `식품개발 4단계 완료! "${data.productName || '새 제품'}" 제품품질관리규격화 단계로 이동했습니다.`,
+          timestamp: new Date(),
+        },
+      ])
+    }
+
+    return (
+      <ProductWizardShadcn
+        onSave={handleSave}
+        onCancel={handleCancel}
+        onComplete={handleComplete}
+        initialData={{
+          productName: "",
+          productType: "",
+          totalWeight: 0,
+          ingredients: [],
+          nutrition: [],
+          labeling: {
+            productName: "",
+            productType: "",
+            ingredients: "",
+            amount: "",
+            expiry: "",
+            packaging: "",
+            reportNo: "",
+            company: "",
+            returnPolicy: "",
+            storage: "",
+            allergy: "",
+            customerService: "",
+            additionalInfo: ""
+          }
+        }}
+      />
+    )
+  }
+
   const renderLawDetails = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -1156,8 +1242,8 @@ export default function FoodLawSystem() {
         return renderLawDetails()
       case SECTIONS.SETTINGS:
         return renderSettings()
-      case SECTIONS.WIZARD_DEMO:
-        return <DemoPageShadcn />
+      case SECTIONS.PRODUCT_WIZARD:
+        return renderProductWizard()
       default:
         return renderDashboard()
     }
@@ -1172,7 +1258,7 @@ export default function FoodLawSystem() {
     onSearch: () => {
       searchInputRef.current?.focus()
     },
-    onNewProduct: () => showSection(SECTIONS.WIZARD_DEMO),
+    onNewProduct: () => showSection(SECTIONS.PRODUCT_WIZARD),
   })
 
   return (
@@ -1202,8 +1288,8 @@ export default function FoodLawSystem() {
                             ? "법령정보"
                             : currentSection === SECTIONS.SETTINGS
                               ? "설정"
-                              : currentSection === SECTIONS.WIZARD_DEMO
-                                ? "마법사 데모"
+                              : currentSection === SECTIONS.PRODUCT_WIZARD
+                                ? "제품 등록 마법사"
                                 : "대시보드"}
                 </BreadcrumbPage>
               </BreadcrumbItem>
