@@ -73,6 +73,7 @@ export function useProducts() {
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [currentProductId, setCurrentProductId] = useState<number | null>(null)
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -96,47 +97,33 @@ export function useProducts() {
   }
 
   // 제품 추가
-  const addProduct = (productData: Partial<Product>) => {
-    const newProduct: Product = {
-      id: 0,
-      uid: 0,
-      product_name: "",
-      product_type: "",
-      product_explain: "",
-      ingredient: [],
-      product_spec: [],
-      raw_spec: [],
-      labeling_info: {
-        id: 0,
-        product_id: 0,
-        product_name: "",
-        product_type: "",
-        base_ingredient: "",
-        weight: 0,
-        expiration_date: "",
-        packing_material: "",
-        report_id: 0,
-        company_info: "",
-        return_info: "",
-        store_info: "",
-        allergy: "",
-        customer_center: "",
-        note: "",
-        created_at: new Date(),
-      },
-      progress: "",
-      regulation_rate: 0,
-      created_at: new Date(),
-      updated_at: new Date(),
+  const addProduct = async (productData: Partial<Product>) => {
+    const newProduct: Partial<Product> = {
+      product_name: productData.product_name,
+      product_type: productData.product_type,
+      product_explain: productData.product_explain,
+      progress: productData.progress,
     }
 
-    saveProducts(newProduct)
-    return newProduct
+    try {
+      const response = await axios.post("/product", newProduct)
+      console.log(response.data.id)
+      setCurrentProductId(response.data.id)
+    } catch (error) {
+      console.error("제품 추가 중 오류가 발생했습니다.", error)
+    }
   }
 
   // 제품 업데이트
-  const updateProduct = (id: number, updates: Partial<Product>) => {
-    
+  const updateProduct = async (id: number, updates: Partial<Product>) => {
+    console.log(currentProductId)
+    console.log(updates)
+    try {
+      const response = await axios.put(`/product/${currentProductId}`, updates)
+      console.log(response.data)
+    } catch (error) {
+      console.error("제품 업데이트 중 오류가 발생했습니다.", error)
+    }
   }
 
   // 제품 삭제
@@ -170,6 +157,15 @@ export function useProducts() {
   // 통계 계산
   const getStatistics = () => {
     const total = products.length
+
+    if (total === 0) return {
+      total: 0,
+      completed: 0,
+      reviewNeeded: 0,
+      analyzing: 0,
+      avgCompliance: 0,
+    }
+
     const completed = products.filter((p) => p.progress === "completed").length
     const reviewNeeded = products.filter((p) => p.progress === "review_needed").length
     const analyzing = products.filter((p) => p.progress === "analyzing").length

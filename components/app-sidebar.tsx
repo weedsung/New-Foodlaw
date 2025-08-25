@@ -162,69 +162,55 @@ const data = {
 }
 
 export function AppSidebar({ onNavigate, onNavigateWizardStep, currentSection, ...props }: AppSidebarProps) {
-  const [isLoading, setIsLoading] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [currentUser, setCurrentUser] = useState({
-    name: "",
-    email: "",
-    avatar: "/placeholder.svg",
-    profile_picture: "/placeholder.svg"
-  })
+  const [user, setUser] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // 로그인 상태 확인 로직
-    const checkLoginStatus = async () => {
-      try {
-        setIsLoading(true)
-        // 로컬 스토리지에서 로그인 상태 확인
-        const token = localStorage.getItem('authToken')
-        const userData = localStorage.getItem('userData')
-        
-        if (token && userData) {
-          setIsLoggedIn(true)
-          setCurrentUser(JSON.parse(userData))
-        } else {
-          setIsLoggedIn(false)
-        }
-      } catch (error) {
-        console.error('로그인 상태 확인 실패:', error)
-        setIsLoggedIn(false)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    checkLoginStatus()
+    checkAuthStatus()
   }, [])
 
-  const handleLogin = () => {
-    // 로그인 페이지로 이동
-    window.location.href = '/login'
-  }
-
-  const handleLogout = async () => {
+  const checkAuthStatus = async () => {
     try {
-      setIsLoading(true)
-      // 로컬 스토리지에서 인증 정보 제거
-      localStorage.removeItem('authToken')
-      localStorage.removeItem('userData')
+      const response = await axios.get('/user/check')
       
-      setIsLoggedIn(false)
-      setCurrentUser({
-        name: "",
-        email: "",
-        avatar: "/placeholder.svg",
-        profile_picture: "/placeholder.svg"
-      })
-      
-      // 홈페이지로 리다이렉트
-      window.location.href = '/'
-    } catch (error) {
-      console.error('로그아웃 실패:', error)
+      if (response.status === 200) {
+        const data = response.data
+        setIsLoggedIn(data.isAuthenticated)
+        setUser(data.user)
+      } else {
+        setIsLoggedIn(false)
+        setUser(null)
+      }
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        setIsLoggedIn(false)
+        setUser(null)
+      } else {
+        console.error('인증 상태 확인 실패:', error)
+        setIsLoggedIn(false)
+        setUser(null)
+      }
     } finally {
       setIsLoading(false)
     }
   }
+
+  const handleLogin = () => {
+    window.location.href = '/login'
+  }
+
+  const handleLogout = async () => {
+    window.location.href = 'http://localhost:8080/api/user/logout'
+  }
+
+  const defaultUser = {
+    name: "홍길동",
+    email: "hong@foodlaw.com",
+    avatar: "/placeholder.svg?height=32&width=32",
+  }
+
+  const currentUser = user || defaultUser
 
   return (
     <Sidebar collapsible="icon" {...props}>

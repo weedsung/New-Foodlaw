@@ -89,8 +89,8 @@ export function ProductWizardShadcn({
   }, [initialStep])
   
   const [wizardData, setWizardData] = useState<ProductWizardData>({
-    productName: "",
-    productType: "",
+    productName: initialData.productName || "",
+    productType: initialData.productType || "",
     totalWeight: 0,
     ingredients: [],
     nutrition: [],
