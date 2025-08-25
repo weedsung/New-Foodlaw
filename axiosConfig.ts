@@ -1,3 +1,4 @@
+
 import axios from 'axios';
 
 // 백엔드 API 기본 URL 설정
@@ -59,3 +60,4 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
+

@@ -1,7 +1,8 @@
 "use client"
 
 import type * as React from "react"
-import { Home, Package, BarChart3, Bell, Settings, User, Scale, FileText, ChevronRight, Rocket, Zap } from "lucide-react"
+import { Home, Package, BarChart3, Bell, Settings, User, Scale, FileText, ChevronRight, Rocket, Zap, LogIn } from "lucide-react"
+import { useState, useEffect } from "react"
 
 import {
   Sidebar,
@@ -23,6 +24,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import axios from "@/axiosConfig"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onNavigate?: (section: string) => void
@@ -160,6 +162,70 @@ const data = {
 }
 
 export function AppSidebar({ onNavigate, onNavigateWizardStep, currentSection, ...props }: AppSidebarProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [currentUser, setCurrentUser] = useState({
+    name: "",
+    email: "",
+    avatar: "/placeholder.svg",
+    profile_picture: "/placeholder.svg"
+  })
+
+  useEffect(() => {
+    // 로그인 상태 확인 로직
+    const checkLoginStatus = async () => {
+      try {
+        setIsLoading(true)
+        // 로컬 스토리지에서 로그인 상태 확인
+        const token = localStorage.getItem('authToken')
+        const userData = localStorage.getItem('userData')
+        
+        if (token && userData) {
+          setIsLoggedIn(true)
+          setCurrentUser(JSON.parse(userData))
+        } else {
+          setIsLoggedIn(false)
+        }
+      } catch (error) {
+        console.error('로그인 상태 확인 실패:', error)
+        setIsLoggedIn(false)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkLoginStatus()
+  }, [])
+
+  const handleLogin = () => {
+    // 로그인 페이지로 이동
+    window.location.href = '/login'
+  }
+
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true)
+      // 로컬 스토리지에서 인증 정보 제거
+      localStorage.removeItem('authToken')
+      localStorage.removeItem('userData')
+      
+      setIsLoggedIn(false)
+      setCurrentUser({
+        name: "",
+        email: "",
+        avatar: "/placeholder.svg",
+        profile_picture: "/placeholder.svg"
+      })
+      
+      // 홈페이지로 리다이렉트
+      window.location.href = '/'
+    } catch (error) {
+      console.error('로그아웃 실패:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -269,39 +335,64 @@ export function AppSidebar({ onNavigate, onNavigateWizardStep, currentSection, .
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            {isLoading ? (
+              <SidebarMenuButton size="lg" disabled>
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600"></div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">로딩 중...</span>
+                </div>
+              </SidebarMenuButton>
+            ) : isLoggedIn ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <Avatar className="h-8 w-8 rounded-lg">
+                      <AvatarImage src={currentUser.profile_picture || currentUser.avatar || "/placeholder.svg"} alt={currentUser.name} />
+                      <AvatarFallback className="rounded-lg">{currentUser.name?.charAt(0) || "사"}</AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">{currentUser.name}</span>
+                      <span className="truncate text-xs">{currentUser.email}</span>
+                    </div>
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+                  side="bottom"
+                  align="end"
+                  sideOffset={4}
                 >
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={data.user.avatar || "/placeholder.svg"} alt={data.user.name} />
-                    <AvatarFallback className="rounded-lg">홍</AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{data.user.name}</span>
-                    <span className="truncate text-xs">{data.user.email}</span>
-                  </div>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                side="bottom"
-                align="end"
-                sideOffset={4}
+                  <DropdownMenuItem>
+                    <User className="mr-2 h-4 w-4" />
+                    프로필
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Settings className="mr-2 h-4 w-4" />
+                    설정
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    로그아웃
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <SidebarMenuButton
+                size="lg"
+                onClick={handleLogin}
+                className="hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               >
-                <DropdownMenuItem>
-                  <User className="mr-2 h-4 w-4" />
-                  프로필
-                </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  설정
-                </DropdownMenuItem>
-                <DropdownMenuItem>로그아웃</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
+                  <LogIn className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">로그인하기</span>
+                  <span className="truncate text-xs">계정에 로그인하세요</span>
+                </div>
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
