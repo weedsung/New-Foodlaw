@@ -2,6 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp, TrendingDown, Package, Clock, CheckCircle, AlertTriangle } from "lucide-react"
+import { useProducts } from "@/hooks/use-products"
 
 const detailedStats = [
   {

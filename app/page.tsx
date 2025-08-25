@@ -133,7 +133,8 @@ export default function FoodLawSystem() {
   const [newProductData, setNewProductData] = useState({
     product_name: "",
     product_type: "",
-    product_explain: ""
+    product_explain: "",
+    progress: "draft"
   })
   const [showNewProductModal, setShowNewProductModal] = useState(false)
   const [currentWorkingProduct, setCurrentWorkingProduct] = useState<any>(null)
@@ -487,7 +488,7 @@ export default function FoodLawSystem() {
                           {product.product_type}
                         </Badge>
                       </div>
-                                              <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <Badge
                             variant={
                               product.progress === "completed"
@@ -1265,7 +1266,8 @@ export default function FoodLawSystem() {
     setNewProductData({
       product_name: "",
       product_type: "",
-      product_explain: ""
+      product_explain: "",
+      progress: "draft"
     })
     
     // 1단계 제품 정보 페이지로 자동 이동
@@ -1277,7 +1279,8 @@ export default function FoodLawSystem() {
     setNewProductData({
       product_name: "",
       product_type: "",
-      product_explain: ""
+      product_explain: "",
+      progress: "draft"
     })
   }
 
@@ -1485,37 +1488,37 @@ export default function FoodLawSystem() {
                   >
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-semibold">
-                        {product.name.charAt(0)}
+                        {product.product_name.charAt(0)}
                       </div>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{product.name}</h4>
+                          <h4 className="font-medium">{product.product_name}</h4>
                           <Badge variant="outline" className="text-xs">
-                            {product.category}
+                            {product.product_type}
                           </Badge>
                         </div>
                         <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <Badge
                             variant={
-                              product.status === "approved"
+                              product.progress === "approved"
                                 ? "default"
-                                : product.status === "review"
+                                : product.progress === "review"
                                   ? "secondary"
-                                  : product.status === "rejected"
+                                  : product.progress === "rejected"
                                     ? "destructive"
                                     : "outline"
                             }
                             className="text-xs"
                           >
-                            {product.status === "draft" && "초안"}
-                            {product.status === "review" && "검토중"}
-                            {product.status === "approved" && "승인됨"}
-                            {product.status === "rejected" && "거부됨"}
+                            {product.progress === "draft" && "초안"}
+                            {product.progress === "review" && "검토중"}
+                            {product.progress === "approved" && "승인됨"}
+                            {product.progress === "rejected" && "거부됨"}
                           </Badge>
-                          {product.complianceRate && <span>법규 준수율: {product.complianceRate}%</span>}
+                          {product.regulation_rate && <span>법규 준수율: {product.regulation_rate}%</span>}
                         </div>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>수정: {new Date(product.lastModified).toLocaleString("ko-KR")}</span>
+                          <span>수정: {new Date(product.updated_at).toLocaleString("ko-KR")}</span>
                         </div>
                         
                         {/* 진행률 표시 */}
@@ -1661,17 +1664,20 @@ export default function FoodLawSystem() {
       
       // 1. 제품 데이터 저장
       const productData = {
-        ...data,
-        id: currentWorkingProduct?.id || Date.now(),
-        name: data.productName || currentWorkingProduct?.name || "새 제품",
-        category: data.productType || currentWorkingProduct?.category || "미분류",
-        status: 'draft',
-        assignee: '개발자',
-        lastModified: new Date().toISOString(),
-        complianceRate: 0 // 품질관리에서 설정될 예정
+        product_name: data.productName,
+        product_type: data.productType,
+        product_explain: data.productExplain,
+        ingredient: data.ingredients,
+        product_spec: data.productSpec,
+        raw_spec: data.rawSpec,
+        labeling_info: data.labeling,
+        progress: "completed",
+        regulation_rate: 0,
       }
+
+      console.log(productData)
       
-      addProduct(productData)
+      updateProduct(0, productData)
       setCurrentProduct(productData)
       
       // 2. 마법사 데이터를 품질관리 섹션에서 사용할 수 있도록 설정
@@ -1706,14 +1712,14 @@ export default function FoodLawSystem() {
 
     // 현재 작업 중인 제품의 초기 데이터 설정
     const initialData = currentWorkingProduct ? {
-      productName: currentWorkingProduct.name || "",
-      productType: currentWorkingProduct.category || "",
+      productName: currentWorkingProduct.product_name || "",
+      productType: currentWorkingProduct.product_type || "",
       totalWeight: 0,
       ingredients: [],
       nutrition: [],
       labeling: {
-        productName: currentWorkingProduct.name || "",
-        productType: currentWorkingProduct.category || "",
+        productName: currentWorkingProduct.product_name || "",
+        productType: currentWorkingProduct.product_type || "",
         ingredients: "",
         amount: "",
         expiry: "",
@@ -1981,7 +1987,7 @@ export default function FoodLawSystem() {
                 id="modal-product-name"
                 placeholder="제품명을 입력하세요"
                 value={newProductData.product_name}
-                onChange={(e) => setNewProductData(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => setNewProductData(prev => ({ ...prev, product_name: e.target.value }))}
                 required
               />
             </div>
@@ -2051,7 +2057,7 @@ export default function FoodLawSystem() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm">
-                          {product.name.charAt(0)}
+                          {product.product_name.charAt(0)}
                         </div>
                         <div>
                           <div className="font-medium">{product.name}</div>

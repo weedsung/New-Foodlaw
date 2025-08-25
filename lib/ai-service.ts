@@ -1,60 +1,286 @@
-// AI 분석 서비스 (시뮬레이션)
+import axiosInstance from "../axiosConfig"
+
+// AI 분석 서비스
 export const aiService = {
-  // AI 분석 실행 (시뮬레이션)
-  analyzeProduct: async (productData: any): Promise<any> => {
-    // 실제 API 호출 시뮬레이션
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-
-    const complianceRate = Math.floor(Math.random() * 20) + 80 // 80-100%
-
-    const recommendations = [
-      "배합비가 적절하게 설정되었습니다.",
-      "나트륨 함량을 5% 줄이는 것을 권장합니다.",
-      "단백질 함량이 기준을 충족합니다.",
-      "첨가물 사용량을 검토해보세요.",
-      "포장재 표시사항을 확인해주세요.",
-    ]
-
-    const selectedRecommendations = recommendations
-      .sort(() => 0.5 - Math.random())
-      .slice(0, Math.floor(Math.random() * 3) + 2)
-
-    return {
-      compliance: complianceRate,
-      recommendations: selectedRecommendations,
-      details: `AI 분석 결과 전반적으로 ${complianceRate >= 90 ? "우수한" : complianceRate >= 80 ? "양호한" : "개선이 필요한"} 상태입니다.`,
-      riskLevel: complianceRate >= 95 ? "low" : complianceRate >= 85 ? "medium" : "high",
-      timestamp: new Date().toISOString(),
+  // AI 제품 유형 분석 (백엔드 API 호출)
+  analyzeProductType: async ({ productName, mainIngredients }: { productName: string; mainIngredients: string }): Promise<any> => {
+    try {
+      console.log("🔍 AI 제품 유형 분석 요청:", { productName, mainIngredients });
+      const response = await axiosInstance.post('/analyze-product', { productName, mainIngredients });
+      console.log("📡 백엔드 응답:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ AI 제품 유형 분석 오류:', error);
+      
+      // 백엔드 연결 실패 시 기본 추천 제공
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+        console.log("🔄 백엔드 연결 실패, 기본 추천 제공");
+        return {
+          success: false,
+          recommendations: [
+            { type: "두류가공품", reason: "백엔드 연결 실패로 기본 추천", standard: "식품공전 기준", similarity_score: "N/A" },
+            { type: "즉석조리식품", reason: "백엔드 연결 실패로 기본 추천", standard: "식품공전 기준", similarity_score: "N/A" },
+            { type: "기타가공품", reason: "백엔드 연결 실패로 기본 추천", standard: "식품공전 기준", similarity_score: "N/A" }
+          ],
+          error: "백엔드 서버에 연결할 수 없습니다. localhost:8080에서 서버가 실행 중인지 확인하세요."
+        };
+      }
+      
+      throw error;
     }
   },
 
-  // 법령 분석 실행 (시뮬레이션)
+  // AI 자동채우기 (백엔드 API 호출)
+  autofillIngredients: async ({ productName, productType, totalWeight, mainIngredients }: { 
+    productName: string; 
+    productType: string; 
+    totalWeight: number; 
+    mainIngredients: string; 
+  }): Promise<any> => {
+    try {
+      console.log("🔍 AI 자동채우기 요청:", { productName, productType, totalWeight, mainIngredients });
+      const response = await axiosInstance.post('/ai-autofill', { 
+        productName, 
+        productType, 
+        totalWeight, 
+        mainIngredients 
+      });
+      console.log("📡 자동채우기 응답:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ AI 자동채우기 오류:', error);
+      
+      // 백엔드 연결 실패 시 기본 배합 제공
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+        console.log("🔄 백엔드 연결 실패, 기본 배합 제공");
+        return {
+          recommendation: {
+            ingredients: [
+              { name: "기본 재료", weight: "100", ratio: "100" },
+              { name: "보조 재료", weight: "50", ratio: "50" }
+            ],
+            explanation: "백엔드 연결 실패로 기본 배합을 제공합니다. localhost:8080에서 서버가 실행 중인지 확인하세요."
+          }
+        };
+      }
+      
+      throw error;
+    }
+  },
+
+  // AI 분석 실행 (백엔드 API 호출)
+  analyzeProduct: async (productData: any): Promise<any> => {
+    try {
+      // 백엔드에 제품 분석 요청
+      const response = await axiosInstance.post('/analyze-product', {
+        productName: productData.name || productData.product_name,
+        mainIngredients: productData.ingredients || productData.ingredient || "정보 없음"
+      });
+      
+      if (response.data.success) {
+        return {
+          compliance: 85, // 기본값, 백엔드에서 계산된 값으로 대체 가능
+          recommendations: response.data.recommendations.map((rec: any) => rec.type),
+          details: `AI 분석 결과 ${response.data.recommendations.length}개의 식품 유형을 추천합니다.`,
+          riskLevel: "medium",
+          timestamp: new Date().toISOString(),
+          backendData: response.data
+        };
+      } else {
+        throw new Error('백엔드 분석 실패');
+      }
+    } catch (error) {
+      console.error('AI 제품 분석 오류:', error);
+      // 오류 시 기본 응답 반환
+      return {
+        compliance: 0,
+        recommendations: ["분석 중 오류가 발생했습니다."],
+        details: "백엔드 연결에 실패했습니다.",
+        riskLevel: "high",
+        timestamp: new Date().toISOString(),
+      };
+    }
+  },
+
+  // 법령 분석 실행 (백엔드 API 호출)
   analyzeLaw: async (productData: any): Promise<any> => {
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    try {
+      // 백엔드에 법령 분석 요청
+      const response = await axiosInstance.post('/analyze-product', {
+        productName: productData.name || productData.product_name,
+        mainIngredients: productData.ingredients || productData.ingredient || "정보 없음"
+      });
+      
+      if (response.data.success) {
+        const recommendations = response.data.recommendations;
+        return {
+          laws: recommendations.map((rec: any) => ({
+            name: rec.type,
+            description: rec.reason
+          })),
+          compliance: recommendations.length > 0 ? "준수" : "검토 필요",
+          warnings: recommendations.length > 0 ? [] : ["적용 가능한 법령을 찾을 수 없습니다."],
+          timestamp: new Date().toISOString(),
+          backendData: response.data
+        };
+      } else {
+        throw new Error('백엔드 법령 분석 실패');
+      }
+    } catch (error) {
+      console.error('AI 법령 분석 오류:', error);
+      // 오류 시 기본 응답 반환
+      return {
+        laws: [],
+        compliance: "검토 필요",
+        warnings: ["백엔드 연결에 실패했습니다."],
+        timestamp: new Date().toISOString(),
+      };
+    }
+  },
 
-    const laws = [
-      { name: "식품위생법 제7조", description: "식품 등의 표시기준에 관한 규정" },
-      { name: "식품공전 제2편", description: "식품일반에 대한 공통기준 및 규격" },
-      { name: "건강기능식품법 제16조", description: "건강기능식품의 표시·광고" },
-      { name: "축산물위생관리법 제6조", description: "축산물의 위생적 취급기준" },
-    ]
-
-    const applicableLaws = laws.slice(0, Math.floor(Math.random() * 2) + 2)
-    const compliance = Math.random() > 0.3 ? "준수" : "부분준수"
-
-    const warnings =
-      compliance === "준수"
-        ? []
-        : ["나트륨 함량 주의 필요", "표시사항 보완 필요", "첨가물 사용기준 확인 필요"].slice(
-            0,
-            Math.floor(Math.random() * 2) + 1,
-          )
-
-    return {
-      laws: applicableLaws,
-      compliance,
-      warnings,
-      timestamp: new Date().toISOString(),
+  // 재료 기반 법령 분석 (백엔드 API 호출)
+  analyzeLawIngredients: async (ingredients: any[]): Promise<any> => {
+    try {
+      console.log("🔍 법령 분석 요청:", ingredients);
+      const response = await axiosInstance.post('/analyze-law', { ingredients });
+      console.log("📡 법령 분석 응답:", response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ 법령 분석 오류:', error);
+      
+      // 백엔드 연결 실패 시 기본 분석 제공
+      if (error.code === 'ECONNREFUSED' || error.message?.includes('Network Error')) {
+        console.log("🔄 백엔드 연결 실패, 기본 법령 분석 제공");
+        return {
+          compliance: true,
+          issues: ["백엔드 연결 실패로 기본 분석을 제공합니다."],
+          references: [
+            {
+              title: "식품위생법",
+              content: "식품의 안전성과 품질을 보장하기 위한 기본 법령입니다."
+            },
+            {
+              title: "식품 등의 표시기준",
+              content: "식품의 표시사항에 대한 구체적인 기준을 제시합니다."
+            }
+          ]
+        };
+      }
+      
+      throw error;
     }
   },
 }
+
+// 식품 영양성분 데이터베이스 관련 함수들
+export const foodNutritionService = {
+  // 식품 검색 (벡터 검색 + 텍스트 검색 폴백)
+  async searchFood(searchQuery: string, page: number = 1, limit: number = 20) {
+    try {
+      const response = await axiosInstance.get('/search-food', {
+        params: { q: searchQuery, page, limit }
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.code === 'ECONNREFUSED') {
+        console.error('🔴 백엔드 서버에 연결할 수 없습니다.');
+        return {
+          success: false,
+          data: [],
+          error: '백엔드 서버에 연결할 수 없습니다.',
+          search_method: 'fallback'
+        };
+      }
+      console.error('식품 검색 오류:', error);
+      throw error;
+    }
+  },
+
+  // 특정 식품 상세 정보 조회
+  async getFoodById(id: string | number) {
+    try {
+      const response = await axiosInstance.get(`/food/${id}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.code === 'ECONNREFUSED') {
+        console.error('🔴 백엔드 서버에 연결할 수 없습니다.');
+        return {
+          success: false,
+          data: null,
+          error: '백엔드 서버에 연결할 수 없습니다.'
+        };
+      }
+      console.error('식품 상세 조회 오류:', error);
+      throw error;
+    }
+  },
+
+  // 카테고리별 식품 조회
+  async getFoodsByCategory(category: string, page: number = 1, limit: number = 20) {
+    try {
+      const response = await axiosInstance.get(`/food/category/${category}`, {
+        params: { page, limit }
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.code === 'ECONNREFUSED') {
+        console.error('🔴 백엔드 서버에 연결할 수 없습니다.');
+        return {
+          success: false,
+          data: [],
+          error: '백엔드 서버에 연결할 수 없습니다.',
+          search_method: 'fallback'
+        };
+      }
+      console.error('카테고리별 식품 조회 오류:', error);
+      throw error;
+    }
+  },
+
+  // 전체 식품 목록 조회
+  async getAllFoods(page: number = 1, limit: number = 50, sort: string = 'food_name', order: string = 'asc') {
+    try {
+      const response = await axiosInstance.get('/foods', {
+        params: { page, limit, sort, order }
+      });
+      return response.data;
+    } catch (error: any) {
+      if (error.code === 'ECONNREFUSED') {
+        console.error('🔴 백엔드 서버에 연결할 수 없습니다.');
+        return {
+          success: false,
+          data: [],
+          error: '백엔드 서버에 연결할 수 없습니다.'
+        };
+      }
+      console.error('전체 식품 목록 조회 오류:', error);
+      throw error;
+    }
+  },
+
+  // 영양성분 기반 유사 식품 추천
+  async recommendSimilarFoods(nutritionData: {
+    energy?: number;
+    protein?: number;
+    fat?: number;
+    carbohydrate?: number;
+    sodium?: number;
+  }) {
+    try {
+      const response = await axiosInstance.post('/recommend-similar', nutritionData);
+      return response.data;
+    } catch (error: any) {
+      if (error.code === 'ECONNREFUSED') {
+        console.error('🔴 백엔드 서버에 연결할 수 없습니다.');
+        return {
+          success: false,
+          data: [],
+          error: '백엔드 서버에 연결할 수 없습니다.',
+          search_method: 'fallback'
+        };
+      }
+      console.error('유사 식품 추천 오류:', error);
+      throw error;
+    }
+  }
+};

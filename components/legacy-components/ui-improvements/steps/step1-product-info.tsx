@@ -280,6 +280,18 @@ export function Step1ProductInfo({
                 <p className="text-sm text-green-700 dark:text-green-300">
                   입력하신 정보를 바탕으로 다음과 같은 제품 유형을 추천합니다:
                 </p>
+                
+                {/* 백엔드 연결 상태 안내 */}
+                {aiRecommendations.some(rec => rec.includes('백엔드 연결 실패')) && (
+                  <div className="p-3 bg-yellow-100 dark:bg-yellow-900/20 rounded-lg border border-yellow-300 dark:border-yellow-700">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      ⚠️ 백엔드 서버에 연결할 수 없습니다. 
+                      <br />
+                      <strong>localhost:8080</strong>에서 백엔드 서버가 실행 중인지 확인하세요.
+                    </p>
+                  </div>
+                )}
+                
                 <div className="space-y-3">
                   {aiRecommendations.map((recommendation, index) => (
                     <div 
@@ -292,13 +304,14 @@ export function Step1ProductInfo({
                             {recommendation}
                           </h6>
                           <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                            추천 신뢰도: 높음
+                            추천 신뢰도: {recommendation.includes('백엔드 연결 실패') ? '낮음 (기본값)' : '높음'}
                           </p>
                         </div>
                         <Button 
                           variant="outline" 
                           size="sm"
                           className="text-green-700 border-green-300 hover:bg-green-100"
+                          onClick={() => handleSelectType(recommendation)}
                         >
                           선택
                         </Button>
