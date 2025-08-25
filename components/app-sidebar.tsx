@@ -201,7 +201,7 @@ export function AppSidebar({ onNavigate, onNavigateWizardStep, currentSection, .
   }
 
   const handleLogout = async () => {
-    window.location.href = 'http://foodlaw:8080/api/user/logout'
+    window.location.href = 'https://port-0-foodlaw-mer6u4s947d037ef.sel5.cloudtype.app/api/user/logout'
   }
 
   const defaultUser = {

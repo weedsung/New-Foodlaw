@@ -11,7 +11,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://foodlaw:8080/api/user/login/google'
+    window.location.href = 'https://port-0-foodlaw-mer6u4s947d037ef.sel5.cloudtype.app/api/user/login/google'
   }
 
   const handleEmailLogin = async (e: React.FormEvent) => {
