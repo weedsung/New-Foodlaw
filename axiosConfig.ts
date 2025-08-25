@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // 백엔드 API 기본 URL 설정
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'https://foodlaw-production-e1f3.up.railway.app/api',
   timeout: 30000, // 30초 타임아웃
   headers: {
     'Content-Type': 'application/json',
@@ -52,7 +52,7 @@ axiosInstance.interceptors.response.use(
     
     // 네트워크 오류인 경우
     if (error.code === 'ECONNREFUSED') {
-      console.error('🔴 백엔드 서버에 연결할 수 없습니다. localhost:8080에서 서버가 실행 중인지 확인하세요.');
+      console.error('🔴 백엔드 서버에 연결할 수 없습니다. Railway 서버가 실행 중인지 확인하세요.');
     }
     
     return Promise.reject(error);

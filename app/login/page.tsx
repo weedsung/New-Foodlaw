@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Scale, LogIn } from 'lucide-react'
 import axios from '@/axiosConfig'
+import { getApiUrl } from '@/lib/config'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -11,7 +12,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleGoogleLogin = () => {
-    window.location.href = 'http://localhost:8080/api/user/login/google'
+    window.location.href = getApiUrl('/user/login/google')
   }
 
   const handleEmailLogin = async (e: React.FormEvent) => {

@@ -10,6 +10,17 @@
 This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
 Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
 
+## Backend Configuration
+
+The application is configured to use the Railway production backend:
+
+**Backend URL:** `https://foodlaw-production-e1f3.up.railway.app`
+
+All API calls are directed to this production server. The configuration is centralized in:
+- `lib/config.ts` - Central configuration file
+- `axiosConfig.ts` - Axios instance configuration
+- `lib/axiosConfig.ts` - Alternative axios configuration
+
 ## Deployment
 
 Your project is live at:

@@ -287,7 +287,7 @@ export function Step1ProductInfo({
                     <p className="text-sm text-yellow-800 dark:text-yellow-200">
                       ⚠️ 백엔드 서버에 연결할 수 없습니다. 
                       <br />
-                      <strong>localhost:8080</strong>에서 백엔드 서버가 실행 중인지 확인하세요.
+                      <strong>Railway 서버</strong>가 실행 중인지 확인하세요.
                     </p>
                   </div>
                 )}

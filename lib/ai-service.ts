@@ -22,7 +22,7 @@ export const aiService = {
             { type: "즉석조리식품", reason: "백엔드 연결 실패로 기본 추천", standard: "식품공전 기준", similarity_score: "N/A" },
             { type: "기타가공품", reason: "백엔드 연결 실패로 기본 추천", standard: "식품공전 기준", similarity_score: "N/A" }
           ],
-          error: "백엔드 서버에 연결할 수 없습니다. localhost:8080에서 서버가 실행 중인지 확인하세요."
+          error: "백엔드 서버에 연결할 수 없습니다. Railway 서버가 실행 중인지 확인하세요."
         };
       }
       
@@ -59,7 +59,7 @@ export const aiService = {
               { name: "기본 재료", weight: "100", ratio: "100" },
               { name: "보조 재료", weight: "50", ratio: "50" }
             ],
-            explanation: "백엔드 연결 실패로 기본 배합을 제공합니다. localhost:8080에서 서버가 실행 중인지 확인하세요."
+            explanation: "백엔드 연결 실패로 기본 배합을 제공합니다. Railway 서버가 실행 중인지 확인하세요."
           }
         };
       }

@@ -201,7 +201,7 @@ export function AppSidebar({ onNavigate, onNavigateWizardStep, currentSection, .
   }
 
   const handleLogout = async () => {
-    window.location.href = 'http://localhost:8080/api/user/logout'
+    window.location.href = 'https://foodlaw-production-e1f3.up.railway.app/api/user/logout'
   }
 
   const defaultUser = {
