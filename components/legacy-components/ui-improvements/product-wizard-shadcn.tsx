@@ -114,6 +114,25 @@ export function ProductWizardShadcn({
   const [showAIResult, setShowAIResult] = useState(false)
   const [showDirectInput, setShowDirectInput] = useState(false)
   const [aiRecommendations, setAIRecommendations] = useState<string[]>([])
+  const [backendConnectionStatus, setBackendConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking')
+
+  // 백엔드 연결 상태 확인
+  useEffect(() => {
+    const checkBackendConnection = async () => {
+      try {
+        const response = await fetch('https://foodlaw-production-e1f3.up.railway.app/api/health', { 
+          method: 'GET',
+          mode: 'no-cors' // CORS 오류 방지
+        });
+        setBackendConnectionStatus('connected');
+      } catch (error) {
+        console.log('백엔드 연결 확인 실패:', error);
+        setBackendConnectionStatus('disconnected');
+      }
+    };
+
+    checkBackendConnection();
+  }, []);
 
   const handleStepClick = (step: number) => {
     // 이전 단계로만 이동 가능 (나중에 검증 로직 추가)
