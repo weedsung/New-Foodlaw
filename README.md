@@ -39,3 +39,26 @@ Continue building your app on:
 2. Deploy your chats from the v0 interface
 3. Changes are automatically pushed to this repository
 4. Vercel deploys the latest version from this repository
+
+## Troubleshooting
+
+### Build Issues
+
+If you encounter build issues related to dependency mismatches:
+
+1. **Lockfile Issues**: Delete `pnpm-lock.yaml` and `package-lock.json` files
+2. **Reinstall Dependencies**: Run `pnpm install` to regenerate lockfiles
+3. **Vercel Build**: The project includes `vercel.json` with optimized build settings
+
+### Development Setup
+
+```bash
+# Install dependencies
+pnpm install
+
+# Run development server
+pnpm dev
+
+# Build for production
+pnpm build
+```
