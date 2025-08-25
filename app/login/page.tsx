@@ -11,25 +11,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleGoogleLogin = () => {
-    // Google OAuth 로그인 처리
-    // 실제로는 Google OAuth API를 사용해야 합니다
-    
-    // 임시로 로그인 성공 처리 (실제 구현 시 제거)
-    const userData = {
-      name: "Google 사용자",
-      email: "google@example.com",
-      avatar: "/placeholder.svg",
-      profile_picture: "/placeholder.svg"
-    }
-    
-    localStorage.setItem('authToken', 'google-token-' + Date.now())
-    localStorage.setItem('userData', JSON.stringify(userData))
-    
-    // 홈페이지로 리다이렉트
-    window.location.href = '/'
-    
-    // 실제 Google OAuth 구현 시 아래 주석 해제
-    // window.location.href = 'http://localhost:8080/api/user/login/google'
+    window.location.href = 'http://localhost:8080/api/user/login/google'
   }
 
   const handleEmailLogin = async (e: React.FormEvent) => {
@@ -39,23 +21,6 @@ export default function LoginPage() {
     try {
       // 이메일/비밀번호 로그인 로직 (백엔드에서 구현 필요)
       console.log('이메일 로그인:', { email, password, rememberMe })
-      
-      // 임시로 로그인 성공 처리 (실제로는 백엔드 API 호출 후 처리)
-      if (email && password) {
-        // 로컬 스토리지에 사용자 정보 저장
-        const userData = {
-          name: email.split('@')[0], // 임시로 이메일에서 이름 추출
-          email: email,
-          avatar: "/placeholder.svg",
-          profile_picture: "/placeholder.svg"
-        }
-        
-        localStorage.setItem('authToken', 'temp-token-' + Date.now())
-        localStorage.setItem('userData', JSON.stringify(userData))
-        
-        // 홈페이지로 리다이렉트
-        window.location.href = '/'
-      }
     } catch (error) {
       console.error('로그인 실패:', error)
     } finally {
