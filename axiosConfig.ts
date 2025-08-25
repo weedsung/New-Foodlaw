@@ -3,7 +3,7 @@ import axios from 'axios';
 
 // 백엔드 API 기본 URL 설정
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'http://foodlaw:8080/api',
   timeout: 30000, // 30초 타임아웃
   headers: {
     'Content-Type': 'application/json',
