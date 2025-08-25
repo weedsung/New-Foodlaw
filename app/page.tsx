@@ -483,7 +483,7 @@ export default function FoodLawSystem() {
                               ></div>
                             </div>
                             <span className="min-w-[3rem]">
-                              {product.wizardProgress || 1}/4단계
+                              {product.wizardProgress || 1}/4단계 
                             </span>
                           </div>
                         </div>
