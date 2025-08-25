@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import { StepIndicatorShadcn, DEFAULT_STEPS } from "./step-indicator-shadcn"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Save, X, Bot, ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { aiService } from "@/lib/ai-service"
 import { 
   Step1ProductInfo, 
   Step2Ingredients, 
@@ -26,17 +27,16 @@ interface Ingredient {
 }
 
 interface NutritionRow {
-  id: number
   name: string
-  ratio: number
-  sodium: number
-  carbs: number
-  sugars: number
+  energy: number
+  protein: number
   fat: number
+  carbohydrate: number
+  sugar: number
+  sodium: number
   transFat: number
   saturatedFat: number
   cholesterol: number
-  protein: number
 }
 
 interface LabelingData {
@@ -87,6 +87,7 @@ export function ProductWizardShadcn({
   useEffect(() => {
     setCurrentStep(initialStep)
   }, [initialStep])
+  
   const [wizardData, setWizardData] = useState<ProductWizardData>({
     productName: "",
     productType: "",
@@ -107,13 +108,55 @@ export function ProductWizardShadcn({
       allergy: "",
       customerService: "",
       additionalInfo: ""
-    },
-    ...initialData
+    }
   })
 
   const [showAIResult, setShowAIResult] = useState(false)
   const [showDirectInput, setShowDirectInput] = useState(false)
   const [aiRecommendations, setAIRecommendations] = useState<string[]>([])
+  const [backendConnectionStatus, setBackendConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking')
+
+  // wizardData를 localStorage에 저장
+  useEffect(() => {
+    if (wizardData.nutrition && wizardData.nutrition.length > 0) {
+      localStorage.setItem('wizardData', JSON.stringify(wizardData));
+      console.log('wizardData localStorage 저장:', wizardData);
+    }
+  }, [wizardData]);
+
+  // localStorage에서 wizardData 복원
+  useEffect(() => {
+    const savedWizardData = localStorage.getItem('wizardData');
+    if (savedWizardData) {
+      try {
+        const parsedData = JSON.parse(savedWizardData);
+        if (parsedData.nutrition && parsedData.nutrition.length > 0) {
+          setWizardData(prev => ({ ...prev, ...parsedData }));
+          console.log('localStorage에서 wizardData 복원:', parsedData);
+        }
+      } catch (error) {
+        console.error('localStorage 데이터 파싱 오류:', error);
+      }
+    }
+  }, []);
+
+  // 백엔드 연결 상태 확인
+  useEffect(() => {
+    const checkBackendConnection = async () => {
+      try {
+        const response = await fetch('http://localhost:8080/api/health', { 
+          method: 'GET',
+          mode: 'no-cors' // CORS 오류 방지
+        });
+        setBackendConnectionStatus('connected');
+      } catch (error) {
+        console.log('백엔드 연결 확인 실패:', error);
+        setBackendConnectionStatus('disconnected');
+      }
+    };
+
+    checkBackendConnection();
+  }, []);
 
   const handleStepClick = (step: number) => {
     // 이전 단계로만 이동 가능 (나중에 검증 로직 추가)
@@ -143,22 +186,45 @@ export function ProductWizardShadcn({
     onComplete?.(wizardData)
   }
 
-  const updateWizardData = (field: keyof ProductWizardData, value: any) => {
+  const updateWizardData = useCallback((field: keyof ProductWizardData, value: any) => {
     setWizardData(prev => ({ ...prev, [field]: value }))
-  }
+  }, [])
 
-  const handleAIAnalyze = (ingredients: string) => {
+  const handleAIAnalyze = async (ingredients: string) => {
     setShowAIResult(true)
     setShowDirectInput(false)
-    // 실제 환경에서는 AI API 호출
-    console.log("AI 분석 재료:", ingredients)
-    setTimeout(() => {
-      setAIRecommendations([
-        "두류가공품",
-        "즉석조리식품", 
-        "기타가공품"
-      ])
-    }, 1500)
+    
+    try {
+      console.log("AI 분석 시작:", { productName: wizardData.productName, ingredients })
+      
+      const result = await aiService.analyzeProductType({
+        productName: wizardData.productName,
+        mainIngredients: ingredients,
+      });
+      
+      console.log("AI 분석 원본 응답:", result);
+      
+      // 응답 형식 검증 및 처리
+      if (result && result.success && result.recommendations && Array.isArray(result.recommendations)) {
+        setAIRecommendations(result.recommendations.map((rec: any) => rec.type));
+        console.log("AI 분석 성공:", result.recommendations);
+      } else if (result && result.recommendations && Array.isArray(result.recommendations)) {
+        // success 필드가 없어도 recommendations가 있으면 처리
+        setAIRecommendations(result.recommendations.map((rec: any) => rec.type));
+        console.log("AI 분석 성공 (success 필드 없음):", result.recommendations);
+      } else if (result && result.recommendation && Array.isArray(result.recommendation)) {
+        // recommendation 필드로 응답이 온 경우 (자동채우기와 동일한 형식)
+        setAIRecommendations(result.recommendation.map((rec: any) => rec.name || rec.type || '알 수 없는 유형'));
+        console.log("AI 분석 성공 (recommendation 형식):", result.recommendation);
+      } else {
+        console.error("AI 분석 응답 형식 오류:", result);
+        console.error("응답 구조:", JSON.stringify(result, null, 2));
+        setAIRecommendations(["AI 분석 실패: 응답 형식을 확인할 수 없습니다."]);
+      }
+    } catch (error) {
+      console.error("AI Product Type Analysis Error:", error);
+      setAIRecommendations(["AI 분석 중 오류가 발생했습니다."]);
+    }
   }
 
   const handleDirectInput = () => {
@@ -182,6 +248,15 @@ export function ProductWizardShadcn({
             <div className="ml-4 text-sm text-muted-foreground">
               {currentStep}/4 단계: {DEFAULT_STEPS[currentStep - 1]?.title || ''}
             </div>
+            {/* 백엔드 연결 상태 표시 */}
+            <Badge 
+              variant={backendConnectionStatus === 'connected' ? 'default' : 'destructive'} 
+              className="text-xs ml-2"
+            >
+              {backendConnectionStatus === 'checking' && '🔍 연결 확인 중...'}
+              {backendConnectionStatus === 'connected' && '✅ 백엔드 연결됨'}
+              {backendConnectionStatus === 'disconnected' && '❌ 백엔드 연결 안됨'}
+            </Badge>
           </div>
           <div className="flex items-center space-x-2">
             <Button 

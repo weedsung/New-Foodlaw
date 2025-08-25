@@ -7,8 +7,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFoo
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { Plus, Trash2, Bot, Scale, Database } from "lucide-react"
+import { Plus, Trash2, Bot, Scale, Database, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { aiService } from "@/lib/ai-service"
 
 interface Ingredient {
   id: string
@@ -40,6 +41,10 @@ export function Step2Ingredients({
       { id: '1', name: '', weight: 0, ratio: 0, notes: '' }
     ]
   )
+  const [isAutofilling, setIsAutofilling] = useState(false)
+  const [isAnalyzingLaw, setIsAnalyzingLaw] = useState(false)
+  const [lawAnalysisResult, setLawAnalysisResult] = useState<any>(null)
+  const [showLawAnalysis, setShowLawAnalysis] = useState(false)
 
   // 총 중량 및 배합비 계산
   useEffect(() => {
@@ -83,6 +88,86 @@ export function Step2Ingredients({
   }
 
   const totalWeight = localIngredients.reduce((sum, ing) => sum + (ing.weight || 0), 0)
+
+  const handleAIAutofill = async () => {
+    if (!productName.trim() || !productType.trim()) {
+      alert("제품명과 제품 유형을 먼저 입력해주세요.");
+      return;
+    }
+
+    setIsAutofilling(true);
+    
+    try {
+      console.log("AI 자동채우기 시작:", { productName, productType, totalWeight, mainIngredients });
+      
+      const result = await aiService.autofillIngredients({
+        productName,
+        productType,
+        totalWeight: totalWeight || 1000, // 기본값 1000g
+        mainIngredients: mainIngredients || "정보 없음"
+      });
+      
+      if (result.recommendation && result.recommendation.ingredients) {
+        // AI 추천 재료로 테이블 업데이트 (기존 비고 값 유지)
+        const aiIngredients = result.recommendation.ingredients.map((ing: any, index: number) => {
+          // 기존 재료의 비고 값을 찾아서 유지
+          const existingIngredient = localIngredients[index];
+          const existingNotes = existingIngredient ? existingIngredient.notes : '';
+          
+          // 중량과 배합비 문자열에서 숫자만 추출
+          const parsedWeight = parseFloat(ing.weight.toString().replace(/[^0-9.]/g, ''));
+          const parsedRatio = parseFloat(ing.ratio.toString().replace(/[^0-9.]/g, ''));
+          
+          return {
+            id: (index + 1).toString(),
+            name: ing.name,
+            weight: isNaN(parsedWeight) ? 0 : parsedWeight,
+            ratio: isNaN(parsedRatio) ? 0 : parsedRatio,
+            notes: existingNotes // 기존 비고 값만 유지, AI 텍스트 추가하지 않음
+          };
+        });
+        
+        setLocalIngredients(aiIngredients);
+        console.log("AI 자동채우기 결과:", result.recommendation);
+        
+        // 부모 컴포넌트에 변경사항 전달
+        onIngredientsChange(aiIngredients);
+        onTotalWeightChange(aiIngredients.reduce((sum: number, ing: any) => sum + ing.weight, 0));
+      } else {
+        alert("AI 자동채우기 결과를 처리할 수 없습니다.");
+      }
+    } catch (error) {
+      console.error("AI 자동채우기 오류:", error);
+      alert("AI 자동채우기 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsAutofilling(false);
+    }
+  };
+
+  const handleLawAnalysis = async () => {
+    if (localIngredients.length === 0 || localIngredients.every(ing => !ing.name.trim())) {
+      alert("분석할 재료가 없습니다. 재료를 먼저 입력해주세요.");
+      return;
+    }
+
+    setIsAnalyzingLaw(true);
+    setShowLawAnalysis(true);
+    
+    try {
+      console.log("법령 분석 시작:", localIngredients);
+      
+      const result = await aiService.analyzeLawIngredients(localIngredients);
+      
+      setLawAnalysisResult(result);
+      console.log("법령 분석 결과:", result);
+      
+    } catch (error) {
+      console.error("법령 분석 오류:", error);
+      alert("법령 분석 중 오류가 발생했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsAnalyzingLaw(false);
+    }
+  };
 
   return (
     <Card className="border-primary/20">
@@ -238,11 +323,17 @@ export function Step2Ingredients({
               variant="secondary" 
               size="sm"
               className="bg-purple-600 hover:bg-purple-700 text-white"
+              onClick={handleAIAutofill}
+              disabled={isAutofilling}
             >
-              <Bot className="mr-2 w-4 h-4" />
-              AI 자동채우기
+              {isAutofilling ? (
+                <Loader2 className="mr-2 w-4 h-4 animate-spin" />
+              ) : (
+                <Bot className="mr-2 w-4 h-4" />
+              )}
+              {isAutofilling ? "AI 분석 중..." : "AI 자동채우기"}
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleLawAnalysis} disabled={isAnalyzingLaw}>
               <Scale className="mr-2 w-4 h-4" />
               법령 분석
             </Button>
@@ -267,6 +358,65 @@ export function Step2Ingredients({
             <li>• 법령 분석으로 식품 관련 규정을 확인할 수 있습니다.</li>
           </ul>
         </div>
+
+        {/* 법령 분석 결과 */}
+        {showLawAnalysis && (
+          <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
+            <h5 className="font-medium text-gray-900 dark:text-gray-100 mb-2">법령 분석 결과</h5>
+            {isAnalyzingLaw ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="mr-2 w-6 h-6 animate-spin text-blue-500 dark:text-blue-400" />
+                <span className="ml-2 text-lg text-blue-500 dark:text-blue-400">법령 분석 중...</span>
+              </div>
+            ) : lawAnalysisResult ? (
+              <div className="space-y-3">
+                {/* 준수 여부 */}
+                <div className={`p-3 rounded-md border ${
+                  lawAnalysisResult.compliance 
+                    ? 'bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800' 
+                    : 'bg-red-50 dark:bg-red-900 border-red-200 dark:border-red-800'
+                }`}>
+                  <h6 className={`font-medium mb-1 ${
+                    lawAnalysisResult.compliance 
+                      ? 'text-green-900 dark:text-green-100' 
+                      : 'text-red-900 dark:text-red-100'
+                  }`}>
+                    준수 여부: {lawAnalysisResult.compliance ? '✅ 준수' : '❌ 미준수'}
+                  </h6>
+                </div>
+
+                {/* 주의사항 */}
+                {lawAnalysisResult.issues && lawAnalysisResult.issues.length > 0 && (
+                  <div className="bg-yellow-50 dark:bg-yellow-900 p-3 rounded-md border border-yellow-200 dark:border-yellow-800">
+                    <h6 className="font-medium text-yellow-900 dark:text-yellow-100 mb-1">⚠️ 주의사항</h6>
+                    <ul className="text-sm text-yellow-700 dark:text-yellow-200 space-y-1">
+                      {lawAnalysisResult.issues.map((issue: string, index: number) => (
+                        <li key={index}>• {issue}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* 관련 법령 */}
+                {lawAnalysisResult.references && lawAnalysisResult.references.length > 0 && (
+                  <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-md border border-blue-200 dark:border-blue-800">
+                    <h6 className="font-medium text-blue-900 dark:text-blue-100 mb-1">📚 관련 법령</h6>
+                    <div className="space-y-2">
+                      {lawAnalysisResult.references.map((ref: any, index: number) => (
+                        <div key={index} className="bg-white dark:bg-blue-800 p-2 rounded border border-blue-200 dark:border-blue-700">
+                          <div className="font-medium text-blue-800 dark:text-blue-200 text-sm">{ref.title}</div>
+                          <p className="text-xs text-blue-600 dark:text-blue-300 mt-1">{ref.content}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">법령 분석 결과가 없습니다.</p>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
