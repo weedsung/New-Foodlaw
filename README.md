@@ -54,11 +54,15 @@ If you encounter build issues related to dependency mismatches:
 
 ```bash
 # Install dependencies
-pnpm install
+npm install
 
 # Run development server
-pnpm dev
+npm run dev
 
 # Build for production
-pnpm build
+npm run build
 ```
+
+### React 18 Compatibility
+
+This project uses React 18.3.1 for better compatibility with vaul@0.9.9 and other dependencies.
