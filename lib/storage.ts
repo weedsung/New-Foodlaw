@@ -1,8 +1,10 @@
+import axios from "@/axiosConfig"
+
 // 로컬 스토리지 관리 유틸리티
 export const storage = {
   // 제품 데이터 저장/불러오기
-  saveProducts: (products: any[]) => {
-    localStorage.setItem("foodlaw_products", JSON.stringify(products))
+  saveProducts: (product: any) => {
+    axios.post("/product", product)
   },
 
   getProducts: (): any[] => {
