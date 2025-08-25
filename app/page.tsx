@@ -60,18 +60,50 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { ProductWizardShadcn } from "@/components/legacy-components/ui-improvements/product-wizard-shadcn"
 
 interface BlendingData {
-  id: number
-  ingredient: string
-  percentage: number
-  weight: number
+  id: number,
+  product_id: number,
+  ingredient_name: string,
+  weight: number,
+  rate: number,
+  note: string,
+  sodium: number,
+  carbohydrate: number,
+  sugar: number,
+  fat: number,
+  trans_fat: number,
+  saturated_fat: number,
+  cholesterol: number,
+  protein: number,
+  created_at: Date,
 }
 
 interface SpecData {
-  id: number
-  category: string
-  item: string
-  standard: string
-  management: string
+  id: number,
+  product_id: number,
+  classification: string,
+  article: string,
+  standard: string,
+  management: string,
+  created_at: Date,
+}
+
+interface LabelingInfoData {
+  id: number,
+  product_id: number,
+  product_name: string,
+  product_type: string,
+  base_ingredient: string,
+  weight: number,
+  expiration_date: string,
+  packing_material: string,
+  report_id: number,
+  company_info: string,
+  return_info: string,
+  store_info: string,
+  allergy: string,
+  customer_center: string,
+  note: string,
+  created_at: Date,
 }
 
 const SECTIONS = {
@@ -99,9 +131,9 @@ export default function FoodLawSystem() {
   const [statusFilter, setStatusFilter] = useState("all")
   const [editingProduct, setEditingProduct] = useState<any>(null)
   const [newProductData, setNewProductData] = useState({
-    name: "",
-    category: "",
-    description: ""
+    product_name: "",
+    product_type: "",
+    product_explain: ""
   })
   const [showNewProductModal, setShowNewProductModal] = useState(false)
   const [currentWorkingProduct, setCurrentWorkingProduct] = useState<any>(null)
@@ -112,23 +144,13 @@ export default function FoodLawSystem() {
   const [showProductSettingsModal, setShowProductSettingsModal] = useState(false)
   const [selectedProductForSettings, setSelectedProductForSettings] = useState<any>(null)
 
-  const [blendingData, setBlendingData] = useState<BlendingData[]>([
-    { id: 1, ingredient: "콩국", percentage: 74.1, weight: 700 },
-    { id: 2, ingredient: "소면", percentage: 21.2, weight: 200 },
-    { id: 3, ingredient: "기타", percentage: 4.7, weight: 100 },
-  ])
+  const [blendingData, setBlendingData] = useState<BlendingData[]>([])
 
-  const [productSpecData, setProductSpecData] = useState<SpecData[]>([
-    { id: 1, category: "미생물", item: "대장균군", standard: "음성", management: "음성 확인" },
-    { id: 2, category: "미생물", item: "살모넬라", standard: "음성", management: "음성 확인" },
-    { id: 3, category: "화학", item: "나트륨", standard: "≤ 800mg/100g", management: "≤ 750mg/100g" },
-  ])
+  const [productSpecData, setProductSpecData] = useState<SpecData[]>([])
 
-  const [rawSpecData, setRawSpecData] = useState<SpecData[]>([
-    { id: 1, category: "품질", item: "수분", standard: "≤ 14%", management: "≤ 12%" },
-    { id: 2, category: "품질", item: "단백질", standard: "≥ 35%", management: "≥ 37%" },
-    { id: 3, category: "안전", item: "아플라톡신", standard: "≤ 15㎍/kg", management: "≤ 10㎍/kg" },
-  ])
+  const [rawSpecData, setRawSpecData] = useState<SpecData[]>([])
+
+  const [labelingInfoData, setLabelingInfoData] = useState<LabelingInfoData>()
 
   const [analysisResults, setAnalysisResults] = useState<any>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
@@ -182,8 +204,7 @@ export default function FoodLawSystem() {
   }
 
   const addBlendingRow = () => {
-    const newId = Math.max(...blendingData.map((item) => item.id)) + 1
-    setBlendingData([...blendingData, { id: newId, ingredient: "", percentage: 0, weight: 0 }])
+    setBlendingData([...blendingData, { id: 0, product_id: 0, ingredient_name: "", weight: 0, rate: 0, note: "", sodium: 0, carbohydrate: 0, sugar: 0, fat: 0, trans_fat: 0, saturated_fat: 0, cholesterol: 0, protein: 0, created_at: new Date() }])
   }
 
   const deleteBlendingRow = (id: number) => {
@@ -198,8 +219,7 @@ export default function FoodLawSystem() {
     const data = type === "product" ? productSpecData : rawSpecData
     const setData = type === "product" ? setProductSpecData : setRawSpecData
 
-    const newId = Math.max(...data.map((item) => item.id)) + 1
-    setData([...data, { id: newId, category: "", item: "", standard: "", management: "" }])
+    setData([...data, { id: 0, product_id: 0, classification: "", article: "", standard: "", management: "", created_at: new Date() }])
   }
 
   const deleteSpecRow = (id: number, type: "product" | "raw") => {
@@ -298,11 +318,14 @@ export default function FoodLawSystem() {
 
     try {
       const productData = {
-        name: currentProduct?.name || "새 제품",
-        ingredients: blendingData,
-        productSpecs: productSpecData,
-        rawSpecs: rawSpecData,
-        complianceRate: calculations.calculateComplianceRate([...productSpecData, ...rawSpecData]),
+        product_name: currentProduct?.product_name || "새 제품",
+        product_type: currentProduct?.product_type || "새 제품",
+        product_explain: currentProduct?.product_explain || "새 제품",
+        ingredient: blendingData,
+        product_spec: productSpecData,
+        raw_spec: rawSpecData,
+        labeling_info: labelingInfoData,
+        regulation_rate: calculations.calculateComplianceRate([...productSpecData, ...rawSpecData]),
       }
 
       if (currentProduct) {
@@ -380,7 +403,7 @@ export default function FoodLawSystem() {
     }
 
     if (statusFilter !== "all") {
-      filtered = filterProducts({ status: statusFilter })
+      filtered = filterProducts({ progress: statusFilter })
     }
 
     return filtered
@@ -388,6 +411,20 @@ export default function FoodLawSystem() {
 
   const statistics = getStatistics()
   const { settings } = useSettings()
+
+  // 진행 상태 표시
+  const getProgressStatus = (progress: string) => {
+    switch (progress) {
+      case "completed":
+        return 4
+      case "review_needed":
+        return 3
+      case "analyzing":
+        return 2
+      default:
+        return 1
+    }
+  }
 
   const renderDashboard = () => (
     <div className="space-y-6">
@@ -441,35 +478,35 @@ export default function FoodLawSystem() {
                 >
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-semibold">
-                      {product.name.charAt(0)}
+                      {product.product_name.charAt(0)}
                     </div>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{product.name}</h4>
+                        <h4 className="font-medium">{product.product_name}</h4>
                         <Badge variant="outline" className="text-xs">
-                          {product.category}
+                          {product.product_type}
                         </Badge>
                       </div>
                                               <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                           <Badge
                             variant={
-                              product.status === "completed"
+                              product.progress === "completed"
                                 ? "default"
-                                : product.status === "review_needed"
+                                : product.progress === "review_needed"
                                   ? "destructive"
                                   : "secondary"
                             }
                             className="text-xs"
                           >
-                            {product.status === "completed"
+                            {product.progress === "completed"
                               ? "분석 완료"
-                              : product.status === "review_needed"
+                              : product.progress === "review_needed"
                                 ? "검토 필요"
-                                : product.status === "analyzing"
+                                : product.progress === "analyzing"
                                   ? "분석 중"
                                   : "작성 중"}
                           </Badge>
-                          {product.complianceRate && <span>법규 준수율: {product.complianceRate}%</span>}
+                          {product.regulation_rate && <span>법규 준수율: {product.regulation_rate}%</span>}
                         </div>
                         
                         {/* 진행률 표시 */}
@@ -479,17 +516,17 @@ export default function FoodLawSystem() {
                             <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
                               <div 
                                 className="h-full bg-blue-500 rounded-full transition-all duration-300"
-                                style={{ width: `${(product.wizardProgress || 1) * 25}%` }}
+                                style={{ width: `${(getProgressStatus(product.progress) || 1) * 25}%` }}
                               ></div>
                             </div>
                             <span className="min-w-[3rem]">
-                              {product.wizardProgress || 1}/4단계
+                              {getProgressStatus(product.progress) || 1}/4단계
                             </span>
                           </div>
                         </div>
                       <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span>담당: {product.assignee}</span>
-                        <span>수정: {new Date(product.lastModified).toLocaleString("ko-KR")}</span>
+                        {/* <span>담당: {product.assignee}</span> */}
+                        <span>수정: {new Date(product.updated_at).toLocaleString("ko-KR")}</span>
                       </div>
                     </div>
                   </div>
@@ -499,9 +536,9 @@ export default function FoodLawSystem() {
                       size="sm"
                       onClick={() => {
                         setCurrentProduct(product)
-                        setBlendingData(product.ingredients || [])
-                        setProductSpecData(product.productSpecs || [])
-                        setRawSpecData(product.rawSpecs || [])
+                        setBlendingData(product.ingredient || [])
+                        setProductSpecData(product.product_spec || [])
+                        setRawSpecData(product.raw_spec || [])
                         showSection(SECTIONS.STANDARDS)
                       }}
                       className="bg-transparent"
@@ -514,7 +551,7 @@ export default function FoodLawSystem() {
                       onClick={() => {
                         setEditingProduct(product)
                         // TODO: 제품 수정 페이지로 이동하는 로직 추가
-                        console.log("제품 수정 클릭됨:", product.name)
+                        console.log("제품 수정 클릭됨:", product.product_name)
                       }}
                       className="bg-transparent"
                     >
@@ -731,16 +768,16 @@ export default function FoodLawSystem() {
                       <TableRow key={item.id}>
                         <TableCell>
                           <Input
-                            value={item.ingredient}
-                            onChange={(e) => updateBlendingData(item.id, "ingredient", e.target.value)}
+                            value={item.ingredient_name}
+                            onChange={(e) => updateBlendingData(item.id, "ingredient_name", e.target.value)}
                             placeholder="원료명 입력"
                           />
                         </TableCell>
                         <TableCell>
                           <Input
                             type="number"
-                            value={item.percentage}
-                            onChange={(e) => updateBlendingData(item.id, "percentage", Number(e.target.value))}
+                            value={item.rate}
+                            onChange={(e) => updateBlendingData(item.id, "rate", Number(e.target.value))}
                             placeholder="0.0"
                             step="0.1"
                             min="0"
@@ -826,15 +863,15 @@ export default function FoodLawSystem() {
                       <TableRow key={item.id}>
                         <TableCell>
                           <Input
-                            value={item.category}
-                            onChange={(e) => updateSpecData(item.id, "category", e.target.value, "product")}
+                            value={item.classification}
+                            onChange={(e) => updateSpecData(item.id, "classification", e.target.value, "product")}
                             placeholder="분류 입력"
                           />
                         </TableCell>
                         <TableCell>
                           <Input
-                            value={item.item}
-                            onChange={(e) => updateSpecData(item.id, "item", e.target.value, "product")}
+                            value={item.article}
+                            onChange={(e) => updateSpecData(item.id, "article", e.target.value, "product")}
                             placeholder="항목 입력"
                           />
                         </TableCell>
@@ -908,15 +945,15 @@ export default function FoodLawSystem() {
                       <TableRow key={item.id}>
                         <TableCell>
                           <Input
-                            value={item.category}
-                            onChange={(e) => updateSpecData(item.id, "category", e.target.value, "raw")}
+                            value={item.classification}
+                            onChange={(e) => updateSpecData(item.id, "classification", e.target.value, "raw")}
                             placeholder="분류 입력"
                           />
                         </TableCell>
                         <TableCell>
                           <Input
-                            value={item.item}
-                            onChange={(e) => updateSpecData(item.id, "item", e.target.value, "raw")}
+                            value={item.article}
+                            onChange={(e) => updateSpecData(item.id, "article", e.target.value, "raw")}
                             placeholder="항목 입력"
                           />
                         </TableCell>
@@ -1081,7 +1118,7 @@ export default function FoodLawSystem() {
 
               return (
                 <div key={index} className="flex items-center space-x-4">
-                  <span className="w-20 text-sm font-medium">{spec.item}:</span>
+                  <span className="w-20 text-sm font-medium">{spec.article}:</span>
                   <div className="flex-1">
                     <div className="flex justify-between text-sm mb-1">
                       <span>기준: {spec.standard}</span>
@@ -1201,47 +1238,34 @@ export default function FoodLawSystem() {
   const handleNewProductSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!newProductData.name.trim()) {
+    if (!newProductData.product_name.trim()) {
       alert("제품명을 입력해주세요.")
       return
     }
-
-    const productData = {
-      id: String(Date.now()),
-      name: newProductData.name,
-      category: newProductData.category || "미분류",
-      description: newProductData.description,
-      status: 'draft' as const,
-      lastModified: new Date().toISOString(),
-      complianceRate: 0,
-      ingredients: [],
-      productSpecs: [],
-      rawSpecs: []
-    }
     
-    addProduct(productData)
-    setCurrentProduct(productData)
+    addProduct(newProductData)
+    setCurrentProduct(newProductData)
     
     setNotifications((prev: any) => [
       ...prev,
       {
         id: Date.now(),
         type: "success",
-        message: `"${newProductData.name}" 제품이 등록되었습니다.`,
+        message: `"${newProductData.product_name}" 제품이 등록되었습니다.`,
         timestamp: new Date(),
       },
     ])
     
     // 현재 작업 중인 제품 설정 및 1단계로 이동
-    setCurrentWorkingProduct(productData)
+    setCurrentWorkingProduct(newProductData)
     setCurrentWizardStep(1)
     
     // 모달 닫기 및 폼 초기화
     setShowNewProductModal(false)
     setNewProductData({
-      name: "",
-      category: "",
-      description: ""
+      product_name: "",
+      product_type: "",
+      product_explain: ""
     })
     
     // 1단계 제품 정보 페이지로 자동 이동
@@ -1251,9 +1275,9 @@ export default function FoodLawSystem() {
   const handleNewProductCancel = () => {
     setShowNewProductModal(false)
     setNewProductData({
-      name: "",
-      category: "",
-      description: ""
+      product_name: "",
+      product_type: "",
+      product_explain: ""
     })
   }
 
@@ -1392,9 +1416,9 @@ export default function FoodLawSystem() {
       showSection(SECTIONS.STANDARDS)
     }
 
-    const handleDeleteProduct = (productId: string | number) => {
+    const handleDeleteProduct = (productId: number) => {
       if (confirm("정말로 이 제품을 삭제하시겠습니까?")) {
-        deleteProduct(String(productId))
+        deleteProduct(Number(productId))
         setNotifications((prev: any) => [
           ...prev,
           {
@@ -1410,7 +1434,7 @@ export default function FoodLawSystem() {
     const filteredProducts = searchQuery
       ? searchProducts(searchQuery)
       : statusFilter !== "all"
-      ? filterProducts({ status: statusFilter })
+      ? filterProducts({ progress: statusFilter })
       : products
 
     return (
@@ -1956,7 +1980,7 @@ export default function FoodLawSystem() {
               <Input
                 id="modal-product-name"
                 placeholder="제품명을 입력하세요"
-                value={newProductData.name}
+                value={newProductData.product_name}
                 onChange={(e) => setNewProductData(prev => ({ ...prev, name: e.target.value }))}
                 required
               />
@@ -1967,8 +1991,8 @@ export default function FoodLawSystem() {
               <Input
                 id="modal-category"
                 placeholder="식품 유형을 입력하세요"
-                value={newProductData.category}
-                onChange={(e) => setNewProductData(prev => ({ ...prev, category: e.target.value }))}
+                value={newProductData.product_type}
+                onChange={(e) => setNewProductData(prev => ({ ...prev, product_type: e.target.value }))}
               />
             </div>
 
@@ -1977,8 +2001,8 @@ export default function FoodLawSystem() {
               <textarea
                 id="modal-description"
                 placeholder="제품에 대한 간단한 설명을 입력하세요"
-                value={newProductData.description}
-                onChange={(e) => setNewProductData(prev => ({ ...prev, description: e.target.value }))}
+                value={newProductData.product_explain}
+                onChange={(e) => setNewProductData(prev => ({ ...prev, product_explain: e.target.value }))}
                 className="w-full min-h-[80px] p-3 border border-input rounded-md resize-none focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
               />
             </div>
