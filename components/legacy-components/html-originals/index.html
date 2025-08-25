@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>FoodLaw - 제품 입력</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+    <link href="css/foodlaw_style.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- 재료/영양성분 입력 -->
+    <div class="section active" id="input">
+        <header class="bg-white shadow-sm p-3">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <div class="text-2xl font-bold text-blue-600 drop-shadow-sm">FoodLaw</div>
+            <div style="display: flex; flex-direction: row; gap: 8px;">
+              <button class="bg-gray-200 text-gray-700 px-4 py-1 rounded-lg hover:bg-gray-300 transition-all flex items-center">
+                <i class="fas fa-save mr-2"></i> 저장
+              </button>
+              <button class="text-gray-700 px-4 rounded-lg hover:bg-gray-300 transition-all flex items-center"
+                      onclick="window.location.href='index.html'">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          </div>
+        </header>
+        
+        <main class="max-w-7xl mx-auto p-6">
+            <!-- 단계 표시 -->
+            <div class="flex justify-center mb-8">
+              <div class="flex items-center space-x-2 overflow-x-auto max-w-full px-1" id="stepBar">
+                <div class="step active" data-step="1">
+                  <div class="rounded-full text-white flex items-center justify-center step-circle bg-blue-500 w-8 h-8 sm:w-10 sm:h-10">1</div>
+                  <span class="text-[10px] sm:text-xs mt-1 whitespace-nowrap">제품 정보</span>
+                </div>
+                <div class="h-1 bg-gray-300 w-8 sm:w-16"></div>
+                <div class="step" data-step="2">
+                  <div class="rounded-full text-white flex items-center justify-center step-circle bg-gray-300 w-8 h-8 sm:w-10 sm:h-10">2</div>
+                  <span class="text-[10px] sm:text-xs mt-1 whitespace-nowrap">재료 입력</span>
+                </div>
+                <div class="h-1 bg-gray-300 w-8 sm:w-16"></div>
+                <div class="step" data-step="3">
+                  <div class="rounded-full text-white flex items-center justify-center step-circle bg-gray-300 w-8 h-8 sm:w-10 sm:h-10">3</div>
+                  <span class="text-[10px] sm:text-xs mt-1 whitespace-nowrap">영양성분</span>
+                </div>
+                <div class="h-1 bg-gray-300 w-8 sm:w-16"></div>
+                <div class="step" data-step="4">
+                  <div class="rounded-full text-white flex items-center justify-center step-circle bg-gray-300 w-8 h-8 sm:w-10 sm:h-10">4</div>
+                  <span class="text-[10px] sm:text-xs mt-1 whitespace-nowrap">표시사항</span>
+                </div>
+                
+              </div>
+            </div>
+            
+            <!-- 제품 정보 입력 섹션 -->
+            <div class="step-content active" id="step1">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">제품 정보 입력</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <label class="block">
+                            제품명
+                            <input class="w-full p-2 mt-1 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500 bg-white shadow-sm" 
+                                   id="productName" 
+                                   type="text" 
+                                   placeholder="제품명을 입력하세요."/>
+                        </label>
+                        <label class="block">
+                            주요 성분
+                            <input class="w-full p-2 mt-1 rounded-lg border border-gray-300 focus:outline-none focus:ring-1 focus:ring-gray-500 bg-white shadow-sm" 
+                                   id="mainIngredients" 
+                                   type="text" 
+                                   placeholder="주요 성분을 입력하세요."/>
+                        </label>
+                    </div>
+                    <div class="mt-4">
+                        <button
+                          id="analyzeBtn"
+                          type="button"
+                          class="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-all flex items-center justify-center w-full md:w-auto
+                                 disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed"
+                          onclick="analyzeProductType()">
+                            <i class="fas fa-robot mr-2"></i> AI 분석 시작
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- AI 분석 결과 -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6 hidden" id="aiAnalysisResult">
+                    <h3 class="text-lg font-semibold mb-4">AI 제품 유형 추천</h3>
+                    <div class="space-y-4" id="aiRecommendations">
+                        <!-- AI 추천 결과가 여기에 동적으로 추가됩니다 -->
+                    </div>
+                    <div class="mt-4 flex justify-end border-t pt-6">
+                        <button id="nextStepBtn1" class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 font-semibold flex items-center disabled:bg-gray-300 disabled:text-gray-400 disabled:cursor-not-allowed" 
+                                onclick="nextStep()">
+                                다음 단계
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 재료 입력 섹션 -->
+            <div class="step-content hidden" id="step2">
+                <div class="bg-white rounded-lg shadow p-6 mb-6 max-w-full overflow-x-hidden">
+                    <h3 class="text-lg font-semibold mb-4">재료 입력</h3>
+                    <!-- 제품 정보 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-medium mb-2">제품 기본 정보</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <span class="w-20 sm:w-24 text-gray-600 text-sm sm:text-base">제품명:</span>
+                                    <span class="font-medium text-sm sm:text-base" id="productNameDisplay">콩비지찌개 간편식</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="w-20 sm:w-24 text-gray-600 text-sm sm:text-base">제품유형:</span>
+                                    <span class="font-medium text-sm sm:text-base" id="productTypeDisplay">두류가공품</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="w-20 sm:w-24 text-gray-600 text-sm sm:text-base">총 중량:</span>
+                                    <span class="font-medium text-sm sm:text-base" id="totalWeightDisplay">0g</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-medium mb-2">주요 성분</h4>
+                            <div class="space-y-1">
+                                <p class="text-gray-700" id="mainIngredientsDisplay">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 재료 입력 테이블 -->
+                    <div class="spreadsheet-table-container">
+                        <table class="spreadsheet-table w-full">
+                            <thead>
+                                <tr>
+                                    <th class="w-1/4 text-xs sm:text-sm">재료명</th>
+                                    <th class="w-1/4 text-xs sm:text-sm">중량(g)</th>
+                                    <th class="w-1/4 text-xs sm:text-sm">배합비(%)</th>
+                                    <th class="w-1/4 text-xs sm:text-sm">비고</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ingredientTableBody">
+                                <tr>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" type="text" placeholder="재료명"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" type="number" placeholder="중량"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number" placeholder="배합비"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" type="text" placeholder="비고"/></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td class="p-1 font-medium">합계</td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full bg-gray-50" readonly="" type="number" id="totalWeight" value="0"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full bg-gray-50" readonly="" type="number" id="totalRatio" value="100.0"/></td>
+                                    <td class="p-1"></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center">
+                        <div class="flex flex-wrap gap-2">
+                            <button class="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-all flex items-center text-sm" 
+                                    onclick="addRow()">
+                                <i class="fas fa-plus mr-1"></i> 행추가
+                            </button>
+                            <button class="bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-all flex items-center text-sm" 
+                                    onclick="deleteRow()">
+                                <i class="fas fa-trash mr-1"></i> 행삭제
+                            </button>
+                            <button class="bg-purple-500 text-white px-3 py-2 rounded-lg hover:bg-purple-600 transition-all flex items-center text-sm" 
+                                    onclick="aiAutoFill()">
+                                <i class="fas fa-robot mr-1"></i> AI자동채우기
+                            </button>
+                            <button class="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-all flex items-center text-sm" 
+                                    onclick="analyzeLaw()">
+                                <i class="fas fa-balance-scale mr-1"></i> 법령분석
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-end border-t pt-6">
+                        <button class="bg-gray-400 text-white px-5 py-2 rounded-lg hover:bg-gray-500 font-semibold flex items-center mr-2" 
+                                onclick="prevStep()">
+                                이전 단계
+                        </button>
+                        <button class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 font-semibold flex items-center" 
+                                onclick="nextStep()">
+                                다음 단계
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 영양성분 입력 섹션 -->
+            <div class="step-content hidden" id="step3">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">영양성분 입력</h3>
+                    <!-- 제품 정보 요약 -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-medium mb-2">제품 기본 정보</h4>
+                            <div class="space-y-2">
+                                <div class="flex items-center">
+                                    <span class="w-20 sm:w-24 text-gray-600 text-sm sm:text-base">제품명:</span>
+                                    <span class="font-medium text-sm sm:text-base" id="productNameDisplay3">콩비지찌개</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="w-20 sm:w-24 text-gray-600 text-sm sm:text-base">제품유형:</span>
+                                    <span class="font-medium text-sm sm:text-base" id="productTypeDisplay3">두류가공품</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <span class="w-20 sm:w-24 text-gray-600 text-sm sm:text-base">총 중량:</span>
+                                    <span class="font-medium text-sm sm:text-base" id="totalWeightDisplay3">945g</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h4 class="font-medium mb-2">주요 성분</h4>
+                            <div class="space-y-1">
+                                <p class="text-gray-700" id="mainIngredientsDisplay3">콩국(74.1%), 소면(21.2%), 오이(4.2%), 땅콩분태(0.5%)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- 영양성분 입력 테이블 -->
+                    <div class="spreadsheet-table-container">
+                        <table class="spreadsheet-table w-full">
+                            <thead>
+                                <tr>
+                                    <th class="w-1/6 text-xs sm:text-sm">구분</th>
+                                    <th class="w-1/6 text-xs sm:text-sm">단위</th>
+                                    <th class="w-1/4 text-xs sm:text-sm">1회<br>제공량</th>
+                                    <th class="w-1/4 text-xs sm:text-sm">영양소<br>기준치</th>
+                                    <th class="w-1/6 text-xs sm:text-sm">1일<br>기준치</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="text-xs sm:text-sm p-1">열량</td>
+                                    <td class="text-xs sm:text-sm p-1">kcal</td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-xs sm:text-sm p-1">탄수화물</td>
+                                    <td class="text-xs sm:text-sm p-1">g</td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-xs sm:text-sm p-1">단백질</td>
+                                    <td class="text-xs sm:text-sm p-1">g</td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-xs sm:text-sm p-1">지방</td>
+                                    <td class="text-xs sm:text-sm p-1">g</td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-xs sm:text-sm p-1">나트륨</td>
+                                    <td class="text-xs sm:text-sm p-1">mg</td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                    <td class="p-1"><input class="text-center text-xs sm:text-sm w-full" readonly="" type="number"/></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex flex-col sm:flex-row gap-2 sm:justify-between sm:items-center">
+                        <div class="flex flex-wrap gap-2">
+                            <button class="bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 transition-all flex items-center text-sm" 
+                                    onclick="connectFoodDB()">
+                                <i class="fas fa-database mr-1"></i> DB연결
+                            </button>
+                            <button class="bg-purple-500 text-white px-3 py-2 rounded-lg hover:bg-purple-600 transition-all flex items-center text-sm" 
+                                    onclick="aiAnalyzeNutrition()">
+                                <i class="fas fa-robot mr-1"></i> AI분석
+                            </button>
+                            <button class="bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-all flex items-center text-sm" 
+                                    onclick="analyzeNutritionLaw()">
+                                <i class="fas fa-balance-scale mr-1"></i> 법령분석
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-8 flex justify-end border-t pt-6">
+                        <button class="bg-gray-400 text-white px-5 py-2 rounded-lg hover:bg-gray-500 font-semibold flex items-center mr-2" 
+                                onclick="prevStep()">
+                                이전 단계
+                        </button>
+                        <button class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 font-semibold flex items-center" 
+                                onclick="nextStep()">
+                                다음 단계
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- step4(표시사항) 섹션 시작 -->
+            <div class="step-content hidden" id="step4">
+                <!-- 표시사항 미리보기(엑셀 스타일 표) -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">표시사항 미리보기</h3>
+                    <table class="w-full border border-gray-300 bg-white rounded-xl">
+                        <thead>
+                            <tr>
+                                <th colspan="4" class="text-left p-2 border-b border-gray-300 bg-gray-50 font-bold">표시사항</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="p-2 border-b border-gray-200 text-gray-700 w-32">제품명</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryProductName" class="w-full border rounded p-1" placeholder="제품명" /></td>
+                                <td class="p-2 border-b border-gray-200 text-gray-700 w-32">식품유형</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryProductType" class="w-full border rounded p-1" placeholder="제품유형" /></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">원료명</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryIngredients" class="w-full border rounded p-1" placeholder="예: 현미(국산)74%, 소면(미국산)21% 등" /></td>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">내용량</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryAmount" class="w-full border rounded p-1" placeholder="예: 912g" /></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">유통기한</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryExpiry" class="w-full border rounded p-1" placeholder="예: 제조일로부터 20일" /></td>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">포장재질</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryPackage" class="w-full border rounded p-1" placeholder="예: 폴리에틸렌(PE)" /></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">품목보고번호</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryReportNo" class="w-full border rounded p-1" placeholder="예: 20230000001" /></td>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">업소명 및 소재지</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryCompany" class="w-full border rounded p-1" placeholder="예: (주)푸드로/서울시 강남구" /></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">반품 및 교환</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryReturn" class="w-full border rounded p-1" placeholder="예: 구입처 및 고객센터" /></td>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">보관방법</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryStorage" class="w-full border rounded p-1" placeholder="예: 냉장(0~10℃) 보관" /></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">알레르기</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryAllergy" class="w-full border rounded p-1" placeholder="예: 대두, 밀, 땅콩 함유" /></td>
+                                <td class="p-2 border-b border-gray-200 text-gray-700">고객센터</td>
+                                <td class="p-2 border-b border-gray-200"><input type="text" id="summaryCS" class="w-full border rounded p-1" placeholder="예: 02-1234-5678" /></td>
+                            </tr>
+                            <tr>
+                                <td class="p-2 border-b border-gray-200 text-gray-700 font-bold" colspan="1">추가사항</td>
+                                <td class="p-2 border-b border-gray-200" colspan="3"><input type="text" id="summaryEtc" class="w-full border rounded p-1" placeholder="예: 부정·불량식품 신고는 국번없이 1399" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- 원료 표시사항 작성 박스(표) -->
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-4">표시사항 작성</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border border-gray-300 rounded-lg text-sm">
+                            <thead>
+                                <tr class="bg-gray-200 border-b border-gray-300">
+                                    <th class="p-1 text-gray-700 font-bold text-center">번호</th>
+                                    <th class="p-1 text-gray-700 font-bold text-center">재료명</th>
+                                    <th class="p-1 text-gray-700 font-bold text-center">배합비 (%)</th>
+                                    <th class="p-1 text-gray-700 font-bold text-center">중량 (g)</th>
+                                    <th class="p-1 text-gray-700 font-bold text-center">식품유형</th>
+                                    <th class="p-1 text-gray-700 font-bold text-center">원산지</th>
+                                    <th class="p-1 text-gray-700 font-bold text-center">알레르기</th>
+                                </tr>
+                            </thead>
+                            <tbody id="labelTableBody">
+                                <tr class="bg-white border-b border-gray-200">
+                                    <td class="p-1 text-center text-gray-600">1</td>
+                                    <td class="p-1"></td>
+                                    <td class="p-1"></td>
+                                    <td class="p-1"></td>
+                                    <td class="p-1"></td>
+                                    <td class="p-1"></td>
+                                    <td class="p-1"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-4 flex flex-wrap justify-between items-center gap-2">
+                        <div class="flex space-x-2">
+                            <button class="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-all flex items-center" onclick="addLabelRow()">
+                                <i class="fas fa-plus mr-2"></i> 행 추가
+                            </button>
+                            <button class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all flex items-center" onclick="deleteLabelRow()">
+                                <i class="fas fa-trash mr-2"></i> 행 삭제
+                            </button>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-all flex items-center" onclick="analyzeLabelAIWithPopup()">
+                                <i class="fas fa-robot mr-2"></i> AI 식품유형 분석
+                            </button>
+                            <button class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-all flex items-center" onclick="analyzeLabelLaw()">
+                                <i class="fas fa-balance-scale mr-2"></i> 법령 분석
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end border-t pt-6">
+                    <button class="bg-gray-400 text-white px-5 py-2 rounded-lg hover:bg-gray-500 font-semibold flex items-center mr-2" onclick="prevStep()">
+                        <i class="fas fa-arrow-left mr-2"></i> 이전 단계
+                    </button>
+                    <button class="bg-blue-500 text-white px-5 py-2 rounded-lg hover:bg-blue-600 font-semibold flex items-center" onclick="nextStep()">
+                        <i class="fas fa-arrow-right mr-2"></i> 다음 단계
+                    </button>
+                </div>
+            </div>
+            
+            <!-- 최종확인 섹션 -->
+            <div class="step-content hidden" id="step5">
+                <div class="bg-white rounded-lg shadow p-6 mb-6">
+                    <h3 class="text-lg font-semibold mb-6">최종 확인 및 PDF 추출</h3>
+                    
+                    <!-- 제품 정보 요약 -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-medium mb-4 text-blue-600 border-b border-blue-200 pb-2">1. 제품 정보</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h5 class="font-medium mb-2">기본 정보</h5>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <span class="w-20 text-gray-600 text-sm">제품명:</span>
+                                        <span class="font-medium text-sm" id="finalProductName">-</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="w-20 text-gray-600 text-sm">제품유형:</span>
+                                        <span class="font-medium text-sm" id="finalProductType">-</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="w-20 text-gray-600 text-sm">총 중량:</span>
+                                        <span class="font-medium text-sm" id="finalTotalWeight">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h5 class="font-medium mb-2">주요 성분</h5>
+                                <p class="text-gray-700 text-sm" id="finalMainIngredients">-</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 재료 정보 -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-medium mb-4 text-green-600 border-b border-green-200 pb-2">2. 재료 정보</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border border-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="border border-gray-200 p-2 text-sm">재료명</th>
+                                        <th class="border border-gray-200 p-2 text-sm">중량(g)</th>
+                                        <th class="border border-gray-200 p-2 text-sm">배합비(%)</th>
+                                        <th class="border border-gray-200 p-2 text-sm">비고</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="finalIngredientsTable">
+                                    <!-- 재료 정보가 여기에 동적으로 추가됩니다 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- 영양성분 정보 -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-medium mb-4 text-purple-600 border-b border-purple-200 pb-2">3. 영양성분 정보</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border border-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="border border-gray-200 p-2 text-sm">구분</th>
+                                        <th class="border border-gray-200 p-2 text-sm">단위</th>
+                                        <th class="border border-gray-200 p-2 text-sm">1회 제공량</th>
+                                        <th class="border border-gray-200 p-2 text-sm">영양소 기준치</th>
+                                        <th class="border border-gray-200 p-2 text-sm">1일 기준치</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="finalNutritionTable">
+                                    <!-- 영양성분 정보가 여기에 동적으로 추가됩니다 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <!-- 표시사항 정보 -->
+                    <div class="mb-8">
+                        <h4 class="text-lg font-medium mb-4 text-orange-600 border-b border-orange-200 pb-2">4. 표시사항 정보</h4>
+                        <div class="overflow-x-auto">
+                            <table class="w-full border border-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="border border-gray-200 p-2 text-sm">표시사항</th>
+                                        <th class="border border-gray-200 p-2 text-sm">내용</th>
+                                        <th class="border border-gray-200 p-2 text-sm">법령근거</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="finalLabelTable">
+                                    <!-- 표시사항 정보가 여기에 동적으로 추가됩니다 -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- 기타 표시사항 -->
+                        <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h5 class="font-medium mb-2">기타 표시사항</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex items-center">
+                                        <span class="w-20 text-gray-600">유통기한:</span>
+                                        <span class="font-medium" id="finalExpiryDate">-</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="w-20 text-gray-600">보관방법:</span>
+                                        <span class="font-medium" id="finalStorageMethod">-</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="w-20 text-gray-600">제조원:</span>
+                                        <span class="font-medium" id="finalManufacturer">-</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="w-20 text-gray-600">품목보고번호:</span>
+                                        <span class="font-medium" id="finalItemReportNo">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- PDF 추출 버튼 -->
+                    <div class="flex justify-center mt-8">
+                        <button class="bg-red-500 text-white px-8 py-3 rounded-lg hover:bg-red-600 transition-all font-semibold flex items-center text-lg" 
+                                onclick="generatePDF()">
+                            <i class="fas fa-file-pdf mr-2"></i> PDF 추출하기
+                        </button>
+                    </div>
+                    
+                    <div class="mt-8 flex justify-end border-t pt-6">
+                        <button class="bg-gray-400 text-white px-5 py-2 rounded-lg hover:bg-gray-500 font-semibold flex items-center" 
+                                onclick="prevStep()">
+                            이전 단계
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- AI 자동채우기 결과 모달 -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center" id="aiAutoFillModal">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">AI 자동채우기 결과</h3>
+            <div class="max-h-96 overflow-y-auto mb-4" id="aiAutoFillContent">
+                <!-- AI 추천 내용이 여기에 표시됩니다 -->
+            </div>
+            <div class="flex justify-end space-x-2">
+                <button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all" 
+                        onclick="closeModal('aiAutoFillModal')">
+                    취소
+                </button>
+                <button class="bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600 transition-all" 
+                        onclick="applyAiRecommendation()">
+                    적용하기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 법령 분석 결과 모달 -->
+    <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center" id="lawAnalysisModal">
+        <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4">
+            <h3 class="text-lg font-semibold mb-4">법령 분석 결과</h3>
+            <div class="max-h-96 overflow-y-auto mb-4" id="lawAnalysisContent">
+                <!-- 법령 분석 내용이 여기에 표시됩니다 -->
+            </div>
+            <div class="flex justify-end">
+                <button class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all" 
+                        onclick="closeModal('lawAnalysisModal')">
+                    닫기
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript 파일 로드 -->
+    <script src="js/foodlaw_script.js"></script>
+    <script>
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('제품 등록 페이지가 로드되었습니다.');
+        });
+    </script>
+</body>
+</html> 

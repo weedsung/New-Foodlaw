@@ -1,8 +1,7 @@
 "use client"
 
 import type * as React from "react"
-import { Home, Package, BarChart3, Bell, Settings, User, Scale, FileText, ChevronRight, LogIn } from "lucide-react"
-import { useState, useEffect } from "react"
+import { Home, Package, BarChart3, Bell, Settings, User, Scale, FileText, ChevronRight, Rocket, Zap } from "lucide-react"
 
 import {
   Sidebar,
@@ -28,6 +27,7 @@ import axios from "@/axiosConfig"
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   onNavigate?: (section: string) => void
+  onNavigateWizardStep?: (step: number) => void
   currentSection?: string
 }
 
@@ -45,10 +45,10 @@ const data = {
       section: "dashboard",
     },
     {
-      title: "제품 관리",
+      title: "제품 개발",
       url: "#",
-      icon: Package,
-      section: "standards",
+      icon: Zap,
+      section: "product-development",
       items: [
         {
           title: "새 제품 등록",
@@ -56,17 +56,40 @@ const data = {
           section: "new-product",
         },
         {
+          title: "1단계 - 제품 정보",
+          url: "#",
+          section: "product-wizard-step1",
+        },
+        {
+          title: "2단계 - 재료 입력",
+          url: "#",
+          section: "product-wizard-step2",
+        },
+        {
+          title: "3단계 - 영양성분 입력",
+          url: "#",
+          section: "product-wizard-step3",
+        },
+        {
+          title: "4단계 - 표시사항 입력",
+          url: "#",
+          section: "product-wizard-step4",
+        },
+      ],
+    },
+    {
+      title: "제품 관리",
+      url: "#",
+      icon: Package,
+      section: "standards",
+      items: [
+        {
           title: "제품 목록",
           url: "#",
           section: "product-list",
         },
         {
-          title: "배합비 관리",
-          url: "#",
-          section: "standards",
-        },
-        {
-          title: "규격 관리",
+          title: "제품품질관리규격서",
           url: "#",
           section: "standards",
         },
@@ -127,60 +150,17 @@ const data = {
       icon: Settings,
       section: "settings",
     },
+    {
+      title: "🚀 제품 등록 마법사",
+      url: "#",
+      icon: Rocket,
+      section: "product-wizard",
+      badge: "NEW",
+    },
   ],
 }
 
-export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarProps) {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [user, setUser] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    checkAuthStatus()
-  }, [])
-
-  const checkAuthStatus = async () => {
-    try {
-      const response = await axios.get('/user/check')
-      
-      if (response.status === 200) {
-        const data = response.data
-        setIsLoggedIn(data.isAuthenticated)
-        setUser(data.user)
-      } else {
-        setIsLoggedIn(false)
-        setUser(null)
-      }
-    } catch (error: any) {
-      if (error.response?.status === 401) {
-        setIsLoggedIn(false)
-        setUser(null)
-      } else {
-        console.error('인증 상태 확인 실패:', error)
-        setIsLoggedIn(false)
-        setUser(null)
-      }
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleLogin = () => {
-    window.location.href = '/login'
-  }
-
-  const handleLogout = async () => {
-    window.location.href = 'http://localhost:8080/api/user/logout'
-  }
-
-  const defaultUser = {
-    name: "홍길동",
-    email: "hong@foodlaw.com",
-    avatar: "/placeholder.svg?height=32&width=32",
-  }
-
-  const currentUser = user || defaultUser
-
+export function AppSidebar({ onNavigate, onNavigateWizardStep, currentSection, ...props }: AppSidebarProps) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -226,13 +206,23 @@ export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarP
                           {item.items.map((subItem) => (
                             <SidebarMenuSubItem key={subItem.title}>
                               <SidebarMenuSubButton
-                                asChild
-                                onClick={() => onNavigate?.(subItem.section)}
+                                onClick={() => {
+                                  // 새 제품 등록인 경우 모달 열기
+                                  if (subItem.section === 'new-product') {
+                                    // 새 제품 등록 모달을 열기 위한 특별한 액션
+                                    onNavigate?.('new-product-modal')
+                                  }
+                                  // 마법사 단계인 경우 onNavigateWizardStep 사용
+                                  else if (subItem.section.startsWith('product-wizard-step')) {
+                                    const step = parseInt(subItem.section.replace('product-wizard-step', ''))
+                                    onNavigateWizardStep?.(step)
+                                  } else {
+                                    onNavigate?.(subItem.section)
+                                  }
+                                }}
                                 isActive={currentSection === subItem.section}
                               >
-                                <a href={subItem.url}>
-                                  <span>{subItem.title}</span>
-                                </a>
+                                <span>{subItem.title}</span>
                               </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                           ))}
@@ -241,15 +231,12 @@ export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarP
                     </Collapsible>
                   ) : (
                     <SidebarMenuButton
-                      asChild
                       tooltip={item.title}
                       isActive={currentSection === item.section}
                       onClick={() => onNavigate?.(item.section)}
                     >
-                      <a href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </a>
+                      <item.icon />
+                      <span>{item.title}</span>
                     </SidebarMenuButton>
                   )}
                 </SidebarMenuItem>
@@ -264,16 +251,14 @@ export function AppSidebar({ onNavigate, currentSection, ...props }: AppSidebarP
             <SidebarMenu>
               {data.navSecondary.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild tooltip={item.title} onClick={() => onNavigate?.(item.section)}>
-                    <a href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                      {item.badge && (
-                        <Badge variant="destructive" className="ml-auto">
-                          {item.badge}
-                        </Badge>
-                      )}
-                    </a>
+                  <SidebarMenuButton tooltip={item.title} onClick={() => onNavigate?.(item.section)}>
+                    <item.icon />
+                    <span>{item.title}</span>
+                    {item.badge && (
+                      <Badge variant="destructive" className="ml-auto">
+                        {item.badge}
+                      </Badge>
+                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
